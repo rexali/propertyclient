@@ -376,7 +376,7 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                     <div className="space-y-3 mb-6">
                       <div className="flex items-center text-gray-600">
                         <Phone className="h-4 w-4 mr-3" />
-                        <a href={`tel:+` + property?.agent?.phone.replace(/^./, '')}>Call: +234{property?.agent?.phone.replace(/^./, '')}</a>
+                        <a href={`tel:+234` + property?.agent?.phone.replace(/^./, '')}>Call: +234{property?.agent?.phone.replace(/^./, '')}</a>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Mail className="h-4 w-4 mr-3" />
