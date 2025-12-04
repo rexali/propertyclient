@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import {
   ChevronLeft, ChevronRight, Heart, Share2, MapPin, Bed, Bath, Square,
   Car, Wifi, Dumbbell, Waves, Shield, Phone, Mail, MessageCircle,
-  Facebook, Twitter, Copy, Star
+  Facebook, Twitter, Copy, Star,
+  Send,
+  MailIcon
 } from 'lucide-react';
 import { useProperty } from '../../context/PropertyContext';
 import { useAuth } from '../../context/AuthContext';
@@ -19,18 +21,17 @@ interface PropertyDetailsPageProps {
   onNavigate: (page: string, data?: any) => void;
 }
 
-
-
 const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, onNavigate }) => {
   const { isAuthenticated, user } = useAuth();
   const { favorites, addFavorite, removeFavorite, setProperty, property } = useProperty();
-
+  
   const initialMessage = {
     recipient: property?.UserId || '', // agentId or email
     sender: user?.userId || '',  // userId
     subject: '',
     content: ''
   };
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactMessage, setContactMessage] = useState(initialMessage);
@@ -58,7 +59,30 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
       ...contactMessage,
       [name]: value
     })
+  }
 
+  const handlePhoneCall = (property: any) => {
+    if (!isAuthenticated) {
+      toast("Please login first to call");
+      return;
+    }
+    window.location.assign(`tel:+234` + property?.agent?.phone.replace(/^./, ''));
+  }
+
+  const handleSendEmail = (property: any) => {
+    if (!isAuthenticated) {
+      toast("Please login first to send email");
+      return;
+    }
+    window.location.assign(`mailto:` + property?.agent?.email) as any;
+  }
+
+  const handleSendSMS = (property: any) => {
+    if (!isAuthenticated) {
+      toast("Please login first to send sms");
+      return;
+    }
+    window.location.assign(`sms//:+234` + property?.agent?.phone.replace(/^./, ''));
   }
 
   const handleFavoriteClick = async (propertyId: number, userId: number) => {
@@ -375,24 +399,32 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                     {/* Send Email */}
                     <div className="space-y-3 mb-6">
                       <div className="flex items-center text-gray-600">
-                        <Phone className="h-4 w-4 mr-3" />
-                        <a href={`tel:+234` + property?.agent?.phone.replace(/^./, '')}>Call: +234{property?.agent?.phone.replace(/^./, '')}</a>
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <Mail className="h-4 w-4 mr-3" />
-                        <a href={`mailto:` + property?.agent?.email}>Send Email</a>
+                        <button
+                          onClick={() => {
+                            handleSendEmail(property);
+                          }}
+                          className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+
+                        >
+                          <MailIcon className="h-4 w-4 mr-2" />
+                          Email</button>
                       </div>
                       {/* Send SMS */}
                       <div className="flex items-center text-gray-600">
-                        <Mail className="h-4 w-4 mr-3" />
-                        <a href={`sms://` + property?.agent?.phone}>Send SMS</a>
+                        <button
+                          onClick={() => {
+                            handleSendSMS(property);
+                          }}
+                          className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        >
+                          <MessageCircle className="h-4 w-4 mr-2" />
+                          SMS</button>
                       </div>
                     </div>
                     <div className="space-y-3">
                       <button
                         onClick={() => {
-                          // alert(`Calling ${property?.agent?.phone}`)
-                          toast("Call: +234" + property?.agent?.phone.replace(/^./, ''));
+                          handlePhoneCall(property)
                         }}
                         className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                       >
@@ -400,10 +432,12 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                         Call Agent
                       </button>
                       <button
-                        onClick={handleContactAgent}
+                        onClick={()=>{
+                          handleContactAgent()
+                        }}
                         className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
                       >
-                        <MessageCircle className="h-4 w-4 mr-2" />
+                        <Send className="h-4 w-4 mr-2" />
                         Send Message
                       </button>
                     </div>
@@ -432,8 +466,9 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                         Virtual Tour
                       </button>
                       <button
-                        onClick={() =>
+                        onClick={() => {
                           onNavigate('contact')
+                        }
                         }
                         className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                       >

@@ -18,7 +18,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
   const { favorites, addFavorite, removeFavorite } = useProperty();
   const { isAuthenticated, user } = useAuth();
   const isFavorite = favorites.includes(String(property?.id));
-  
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -30,7 +30,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
 
   const handleFavoriteClick = async (propertyId: number, userId: number) => {
     if (!isAuthenticated) {
-      alert('Please login to save favorite properties');
+      toast("Please login to save favorite properties");
       return;
     }
 
@@ -52,7 +52,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
       navigator.share({
         title: property.title,
         text: `Check out this amazing property: ${property.title}`,
-        url: window.location.href +"/"+property.id,
+        url: window.location.href + "/" + property.id,
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
@@ -153,7 +153,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
           <div className="flex items-center">
             <img
-              src={BASE_URL_LOCAL+"/uploads/"+JSON.parse(property.agent as any).avatar}
+              src={BASE_URL_LOCAL + "/uploads/" + JSON.parse(property.agent as any).avatar}
               alt={JSON.parse(property.agent as any).name}
               className="w-8 h-8 rounded-full mr-2"
               crossOrigin=''
@@ -168,7 +168,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
           </div>
           <div className="flex space-x-2">
             <button
-              onClick={() => alert(`Calling ${JSON.parse(property.agent as any).phone}`)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  toast("Please login first to call the agent");
+                  return;
+                }
+                toast(`Calling ${JSON.parse(property.agent as any).phone}`)
+              }}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
               title="Contact Agent"
             >

@@ -10,6 +10,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, user, admin, logout } = useAuth();
+  // const onNavigate = useNavigate()
 
   const navigation = [
     { name: 'Home', href: 'home', icon: Home },

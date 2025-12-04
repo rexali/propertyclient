@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Toaster } from "sonner";
-
-
 import { AuthProvider } from './context/AuthContext';
 import { PropertyProvider } from './context/PropertyContext';
 import Header from './components/layout/Header';
@@ -24,6 +22,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 function App() {
   const [currentPage, setCurrentPage] = React.useState('home');
   const [pageData, setPageData] = useState<any>(null);
+  // const onNavigate = useNavigate();
   const propertyId = window.location.pathname.split('/')[2];
 
   const handleNavigate = (page: string, data?: any): void => {
@@ -86,9 +85,26 @@ function App() {
             {shouldShowHeaderFooter && (
               <Header currentPage={currentPage} onNavigate={handleNavigate} />
             )}
-
             <main className="flex-1">
               {renderPage()}
+              {/* <Router>
+                <Routes>
+                  <Route index element={<HomePage onNavigate={handleNavigate}/>} />
+                  <Route path="properties" element={<PropertiesPage onNavigate={handleNavigate}/>} />
+                  <Route path="property-details" element={<PropertyDetailsPage propertyId={pageData} onNavigate={handleNavigate} />} />
+                  <Route path="properties/:id" element={<PropertyDetailsPage propertyId={pageData} onNavigate={handleNavigate} />} />
+                  <Route path='services' element={<ServicesPage onNavigate={handleNavigate} />} />
+                  <Route path='about' element={<AboutPage onNavigate={handleNavigate} />} />
+                  <Route path='contact' element={<ContactPage onNavigate={handleNavigate}/>} />
+                  <Route path='login' element={<LoginPage onNavigate={handleNavigate} />} />
+                  <Route path='admin-login' element={<AdminLoginPage onNavigate={handleNavigate} />} />
+                  <Route path='forget-password' element={<ForgetPasswordPage onNavigate={handleNavigate} />} />
+                  <Route path='admin-dashboard' element={<AdminDashboard onNavigate={handleNavigate} />} />
+                  <Route path='change-password' element={<ChangePasswordPage onNavigate={handleNavigate} />} />
+                  <Route path='confirm-registration' element={<ConfirmRegistrationPage onNavigate={handleNavigate} />} />
+                  <Route path='user-dashboard' element={<UserDashboard onNavigate={handleNavigate} />} />
+                </Routes>
+              </Router> */}
             </main>
             <Toaster position='top-center' theme='dark' />
             {shouldShowHeaderFooter && (

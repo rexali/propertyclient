@@ -3,7 +3,6 @@ import { Star, Users, Award, ChevronRight, TrendingUp } from 'lucide-react';
 import PropertyCard from '../common/PropertyCard';
 import SearchFilters from '../search/SearchFilters';
 import { useProperty } from '../../context/PropertyContext';
-import { Property } from '../../types';
 import { getPropertiesAPI } from '../dashboard/api/admin/property/getPropertiesAPI';
 
 interface HomePageProps {
@@ -12,7 +11,6 @@ interface HomePageProps {
 
 const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const { properties, setProperties, filters, setFilters, setCategoryProperties } = useProperty();
-
   const featuredProperties = properties?.filter(p => p.isFeatured).slice(0, 6);
   const popularProperties = properties?.filter(p => p.status).slice(0, 8);
   const newProperties = properties?.filter(p => p.status)
@@ -20,7 +18,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
     .slice(0, 4);
   const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 4);
 
-  const handleViewProperty = (property: Property) => {
+  const handleViewProperty = (property: any) => {
     onNavigate('property-details', property);
   };
 
@@ -114,7 +112,6 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Find Your <span className="text-teal-300">Dream Home</span>
           </h1>
-          {/* <button onClick={()=>onNavigate("confirm-registration")}>fo</button> */}
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
             Discover the perfect property with our comprehensive real estate platform.
             From luxury villas to cozy apartments, we have it all.
@@ -158,7 +155,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 onClick={() => {
                   onNavigate('properties');
                   setTimeout(() => {
-                  setCategoryProperties(properties.filter(property=>property.type===category.name.toLowerCase().replace(/.$/,'')));
+                    setCategoryProperties(properties.filter(property => property.type === category.name.toLowerCase().replace(/.$/, '')));
                   }, 200);
                 }}
                 className="group p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-center border-2 border-transparent hover:border-blue-500"
