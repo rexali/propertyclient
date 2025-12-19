@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { forgetPasswordAPI } from './api/forgetPasswordAPI';
+import { useNavigate } from 'react-router-dom';
 
     interface  ForgetPasswordProps{
        onNavigate: any 
     }
 
-const ForgetPasswordPage: React.FC<ForgetPasswordProps> = ({onNavigate}) => {
+const ForgetPasswordPage: React.FC = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,7 +109,7 @@ const ForgetPasswordPage: React.FC<ForgetPasswordProps> = ({onNavigate}) => {
                         <div className="mt-6">
                             <a
                                 href="#"
-                                onClick={()=>onNavigate("login")}
+                                onClick={()=>navigate("/login")}
                                 className="w-full flex justify-center text-sm font-medium text-blue-600 hover:text-blue-500"
                             >
                                 Back to login

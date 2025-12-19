@@ -1,6 +1,6 @@
 import { Property } from "../types";
 
-export const handleShare = (property: Property) => {
+export const handleSimpleShare = (property: Property) => {
   if (navigator.share) {
     navigator.share({
       title: property.title,

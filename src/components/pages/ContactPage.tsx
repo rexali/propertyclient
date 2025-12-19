@@ -5,10 +5,9 @@ import {
 } from 'lucide-react';
 import { addMessageAPI } from '../dashboard/api/admin/messages/addMessageAPI';
 import { toast } from 'sonner';
-
-interface ContactPageProps {
-  onNavigate: (page: string) => void;
-}
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { handlePriceFormat } from '../../utils/handlePriceFormat';
 
 const initialFormData = {
   name: '',
@@ -21,16 +20,24 @@ const initialFormData = {
   preferredContact: 'email',
 };
 
-const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
+const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log('Form submitted:', formData);
+
+    if (!isAuthenticated) {
+      toast("Please login first to before you schedule a visit");
+      return;
+    }
+
     let result = await addMessageAPI(formData);
+
     if (result) {
       toast("Message sent!");
       setFormData(initialFormData);
@@ -247,11 +254,11 @@ const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="">Select budget range</option>
-                        <option value="under-300k">Under $300,000</option>
-                        <option value="300k-500k">$300,000 - $500,000</option>
-                        <option value="500k-750k">$500,000 - $750,000</option>
-                        <option value="750k-1m">$750,000 - $1,000,000</option>
-                        <option value="over-1m">Over $1,000,000</option>
+                        <option value="under-300k">Under {handlePriceFormat(300000)}</option>
+                        <option value="300k-500k">{handlePriceFormat(300000)} - {handlePriceFormat(500000)}</option>
+                        <option value="500k-750k">{handlePriceFormat(500000)} - {handlePriceFormat(750000)}</option>
+                        <option value="750k-1m">{handlePriceFormat(750000)} - {handlePriceFormat(1000000)}</option>
+                        <option value="over-1m">Over {handlePriceFormat(1000000)}</option>
                       </select>
                     </div>
                   </div>
@@ -306,8 +313,8 @@ const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                     type="submit"
                     disabled={isSubmitting}
                     className={`w-full flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-colors duration-200 ${isSubmitting
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
                       }`}
                   >
                     {isSubmitting ? (
@@ -446,7 +453,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
               Call Now
             </a>
             <button
-              onClick={() => onNavigate('properties')}
+              onClick={() => navigate('/properties')}
               className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               Browse Properties

@@ -4,29 +4,32 @@ import PropertyCard from '../common/PropertyCard';
 import SearchFilters from '../search/SearchFilters';
 import { useProperty } from '../../context/PropertyContext';
 import { getPropertiesAPI } from '../dashboard/api/admin/property/getPropertiesAPI';
+import { useNavigate } from 'react-router-dom';
 
-interface HomePageProps {
-  onNavigate: (page: string, data?: any) => void;
-}
-
-const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
-  const { properties, setProperties, filters, setFilters, setCategoryProperties } = useProperty();
-  const featuredProperties = properties?.filter(p => p.isFeatured).slice(0, 6);
-  const popularProperties = properties?.filter(p => p.status).slice(0, 8);
+const HomePage: React.FC = () => {
+  const { properties, setProperties, filters, setFilters } = useProperty();
+  const navigate = useNavigate();
+  const featuredProperties = properties?.filter(p => p.isFeatured).slice(0, 3);
+  const popularProperties = properties?.filter(p => p.status).slice(0, 3);
   const newProperties = properties?.filter(p => p.status)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 4);
-  const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 4);
+    .slice(0, 3);
+  const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 3);
 
-  const handleViewProperty = (property: any) => {
-    onNavigate('property-details', property);
+  const handleViewProperty = (value: any) => {
+    navigate('/properties/' + value, { state: value });
   };
-
+  
   const categories = [
     { name: 'Apartments', count: properties?.filter(p => p.type === 'apartment').length, icon: '🏢' },
     { name: 'Houses', count: properties?.filter(p => p.type === 'house').length, icon: '🏠' },
     { name: 'Condos', count: properties?.filter(p => p.type === 'condo').length, icon: '🏘️' },
     { name: 'Villas', count: properties?.filter(p => p.type === 'villa').length, icon: '🏖️' },
+    { name: 'Flats', count: properties?.filter(p => p.type === 'flat').length, icon: '🏖️' },
+    { name: 'Self-contained', count: properties?.filter(p => p.type === 'self-contained').length, icon: '🏖️' },
+    { name: 'Duplex', count: properties?.filter(p => p.type === 'duplex').length, icon: '🏖️' },
+    { name: 'Townhouses', count: properties?.filter(p => p.type === 'townhouse').length, icon: '🏖️' },
+    { name: 'Bungalows', count: properties?.filter(p => p.type === 'bungalow').length, icon: '🏖️' },
   ];
 
   const stats = [
@@ -83,12 +86,12 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   ];
 
   const partners = [
-    { name: 'Bank of America', logo: '🏛️' },
-    { name: 'Wells Fargo', logo: '🏦' },
-    { name: 'Chase', logo: '💳' },
-    { name: 'Coldwell Banker', logo: '🏢' },
-    { name: 'RE/MAX', logo: '🏠' },
-    { name: 'Century 21', logo: '🔑' },
+    { name: 'Bank of Nigeria', logo: '🏛️' },
+    { name: 'Good Homes Ltd', logo: '🏦' },
+    { name: 'Dange Estate', logo: '💳' },
+    { name: 'Paystack', logo: '🏢' },
+    { name: 'Sinotech Ltd', logo: '🏠' },
+    { name: 'Ranitech', logo: '🔑' },
   ];
 
   useEffect(() => {
@@ -96,7 +99,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       let data = await getPropertiesAPI();
       setProperties(data?.properties);
     })();
-  }, [])
+  }, []);
+  
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -113,14 +117,14 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             Find Your <span className="text-teal-300">Dream Home</span>
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto opacity-90">
-            Discover the perfect property with our comprehensive real estate platform.
+            Discover the perfect property or home with our comprehensive real estate platform.
             From luxury villas to cozy apartments, we have it all.
           </p>
           <button
-            onClick={() => onNavigate('properties')}
+            onClick={() => navigate('/properties')}
             className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 transform hover:scale-105"
           >
-            Explore Properties to Rent or Buy
+            Explore properties and homes to rent or buy or to rent for vacation
           </button>
         </div>
       </section>
@@ -129,14 +133,15 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Search Properties</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Search properties or homes</h2>
             <p className="text-lg text-gray-600">Find your perfect property with our advanced search</p>
           </div>
           <SearchFilters
             filters={filters}
             onFiltersChange={setFilters}
             compact={true}
-            onNavigate={onNavigate}
+            onNavigate={navigate}
+            getFilteredData={undefined}
           />
         </div>
       </section>
@@ -153,10 +158,8 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <button
                 key={index}
                 onClick={() => {
-                  onNavigate('properties');
-                  setTimeout(() => {
-                    setCategoryProperties(properties.filter(property => property.type === category.name.toLowerCase().replace(/.$/, '')));
-                  }, 200);
+                  setFilters({ ...filters, propertyType: category.name.toLowerCase().replace(/s$/, '') });
+                  navigate('/category?propertyType=' + category.name.toLowerCase().replace(/.s$/, ''));
                 }}
                 className="group p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-center border-2 border-transparent hover:border-blue-500"
               >
@@ -197,7 +200,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <p className="text-lg text-gray-600">Hand-picked premium properties</p>
             </div>
             <button
-              onClick={() => onNavigate('properties')}
+              onClick={() => navigate('/properties')}
               className="text-blue-600 hover:text-blue-700 font-semibold flex items-center"
             >
               View All <ChevronRight className="h-5 w-5 ml-1" />
@@ -224,7 +227,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <p className="text-lg text-gray-600">Most viewed properties this week</p>
             </div>
             <button
-              onClick={() => onNavigate('properties')}
+              onClick={() => navigate('properties')}
               className="text-blue-600 hover:text-blue-700 font-semibold flex items-center"
             >
               View All <ChevronRight className="h-5 w-5 ml-1" />
@@ -248,11 +251,11 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Newly Added</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">New</h2>
               <p className="text-lg text-gray-600">Latest additions to our portfolio</p>
             </div>
             <button
-              onClick={() => onNavigate('properties')}
+              onClick={() => navigate('/properties')}
               className="text-blue-600 hover:text-blue-700 font-semibold flex items-center"
             >
               View All <ChevronRight className="h-5 w-5 ml-1" />
@@ -274,7 +277,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-centerm mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Recently Sold</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Sold</h2>
             <p className="text-lg text-gray-600">See what sold in your area</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -283,7 +286,7 @@ const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 key={property.id}
                 property={property}
                 onViewDetails={handleViewProperty}
-                showStatus={true}
+                showStatus={false}
               />
             ))}
           </div>

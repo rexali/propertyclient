@@ -17,7 +17,7 @@ export async function getNotificationAPI(id:number) {
         }
         const data = await response.json() as ResponseType;
         return {
-            success: true,
+            success:  data.status==='success',
             notification: data.data.notification,
         };
     } catch (error: any) {

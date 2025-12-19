@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal, MapPin, DollarSign, Bed, Bath, Home } from 'lucide-react';
 import { FilterOptions } from '../../types';
+import { useSearchParams } from 'react-router-dom';
+import { statesLGsInObject } from '../../data/stateData';
 
 interface SearchFiltersProps {
   filters: FilterOptions;
   onFiltersChange: (filters: Partial<FilterOptions>) => void;
   compact?: boolean;
-  onNavigate: (page: string, pageData?: any) => void
+  onNavigate: (page: string, pageData?: any) => void;
+  getFilteredData: any,
+  currentPage?: any
 }
 
-const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange, compact = false, onNavigate }) => {
+const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange, currentPage, compact = false, onNavigate, getFilteredData }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [_, setSearchParams] = useSearchParams();
 
   const propertyTypes = [
     { value: '', label: 'All Types' },
@@ -63,9 +68,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
             <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search location..."
+              placeholder="Search by state..."
               value={filters.location}
-              onChange={(e) => onFiltersChange({ location: e.target.value })}
+              onChange={(e) => {
+                onFiltersChange({ ...filters as any, location: e.target.value });
+              }}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -73,7 +80,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
           {/* Property Type */}
           <select
             value={filters.propertyType}
-            onChange={(e) => onFiltersChange({ propertyType: e.target.value })}
+            onChange={(e) => {
+              onFiltersChange({ ...filters as any, propertyType: e.target.value });
+            }}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             {propertyTypes.map((type) => (
@@ -85,9 +94,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
 
           {/* Search Button */}
           <button
-            onClick={() => onNavigate('properties')}
+            onClick={() => {
+              onNavigate('/search?' + new URLSearchParams(filters as any))
+            }}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center">
-
             <Search className="h-4 w-4 mr-2" />
             Search
           </button>
@@ -99,32 +109,45 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       {/* Main Search */}
-      {/* Location */}
+      {/* Location state */}
       <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
         <MapPin className="absolute left-3 top-9 h-4 w-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Enter location..."
-          value={filters.location}
-          onChange={(e) => onFiltersChange({ location: e.target.value })}
+        <select
+          required
+          value={filters.state}
+          onChange={async (e) => {
+            onFiltersChange({ ...filters as any, state: e.target.value, localGovt: ''});
+            setSearchParams({ ...filters as any, state: e.target.value, localGovt: '' });
+          }}
           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+        >
+          <option value="">Select</option>
+          {Object.keys(statesLGsInObject)?.map((state: string, i: number) => (<option key={i} value={state}>{state}</option>))}
+        </select>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        {/* Location */}
-        {/* <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-          <MapPin className="absolute left-3 top-9 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Enter location..."
-            value={filters.location}
-            onChange={(e) => onFiltersChange({ location: e.target.value })}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div> */}
+      {/* Location local govt */}
+      <div className="relative">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Local Govt.</label>
+        <MapPin className="absolute left-3 top-9 h-4 w-4 text-gray-400" />
+        <select
+          required
+          value={filters.localGovt}
+          onChange={async (e) => {
+            onFiltersChange({ ...filters as any, localGovt: e.target.value});
+            setSearchParams({ ...filters as any, localGovt: e.target.value });
+          }}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 
+        >
+          <option value="">Select</option>
+          {(statesLGsInObject[filters.state as any])?.map((LG: any) => (
+            <option key={LG} value={LG}>{LG}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {/* Property Type */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
@@ -132,7 +155,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
             <Home className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <select
               value={filters.propertyType}
-              onChange={(e) => onFiltersChange({ propertyType: e.target.value })}
+              onChange={(e) => {
+                onFiltersChange({ ...filters as any, propertyType: e.target.value });
+                setSearchParams({ ...filters as any, propertyType: e.target.value });
+              }}
+
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
             >
               {propertyTypes.map((type) => (
@@ -151,7 +178,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
             <Bed className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <select
               value={filters.bedrooms}
-              onChange={(e) => onFiltersChange({ bedrooms: parseInt(e.target.value) })}
+              onChange={(e) => {
+                onFiltersChange({ ...filters, bedrooms: parseInt(e.target.value) });
+                setSearchParams({ ...filters as any, bedrooms: e.target.value });
+              }}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
             >
               {bedroomOptions.map((option) => (
@@ -170,7 +200,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
             <Bath className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <select
               value={filters.bathrooms}
-              onChange={(e) => onFiltersChange({ bathrooms: parseInt(e.target.value) })}
+              onChange={(e) => {
+                onFiltersChange({ ...filters, bathrooms: parseInt(e.target.value) });
+                setSearchParams({ ...filters as any, bathrooms: parseInt(e.target.value) });
+              }}
+
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
             >
               {bathroomOptions.map((option) => (
@@ -198,7 +232,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
           <span className="text-sm text-gray-600">Sort by:</span>
           <select
             value={filters.sortBy}
-            onChange={(e) => onFiltersChange({ sortBy: e.target.value as FilterOptions['sortBy'] })}
+            onChange={(e) => {
+              onFiltersChange({ ...filters, sortBy: e.target.value as FilterOptions['sortBy'] });
+              setSearchParams({ ...filters as any, sortBy: e.target.value as FilterOptions['sortBy'] });
+            }}
             className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           >
             {sortOptions.map((option) => (
@@ -223,7 +260,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
                   onChange={(e) => {
                     const range = priceRanges.find(r => `${r.min}-${r.max}` === e.target.value);
                     if (range) {
-                      onFiltersChange({ minPrice: range.min, maxPrice: range.max });
+                      onFiltersChange({ ...filters, minPrice: range.min, maxPrice: range.max });
+                      setSearchParams({ ...filters as any, minPrice: range.min, maxPrice: range.max });
                     }
                   }}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
@@ -245,14 +283,20 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
                   type="number"
                   placeholder="Min price"
                   value={filters.minPrice || ''}
-                  onChange={(e) => onFiltersChange({ minPrice: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    onFiltersChange({ ...filters, minPrice: parseInt(e.target.value) })
+                    setSearchParams({ ...filters as any, minPrice: parseInt(e.target.value) });
+                  }}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <input
                   type="number"
                   placeholder="Max price"
                   value={filters.maxPrice || ''}
-                  onChange={(e) => onFiltersChange({ maxPrice: parseInt(e.target.value) || 10000000 })}
+                  onChange={(e) => {
+                    onFiltersChange({ ...filters, maxPrice: parseInt(e.target.value) || 10000000 })
+                    setSearchParams({ ...filters as any, maxPrice: parseInt(e.target.value) || 10000000 });
+                  }}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -267,6 +311,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
           onClick={() => {
             onFiltersChange({
               location: '',
+              state: '',
+              localGovt: '',
               minPrice: 0,
               maxPrice: 10000000,
               bedrooms: 0,
@@ -274,14 +320,30 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onFiltersChange,
               propertyType: '',
               sortBy: 'newest',
             });
+            setSearchParams({
+              location: '',
+              state: '',
+              localGovt: '',
+              minPrice: 0,
+              maxPrice: 10000000,
+              bedrooms: 0,
+              bathrooms: 0,
+              propertyType: '',
+              sortBy: 'newest',
+            } as any);
           }}
           className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
         >
           Clear All
         </button>
-        <button className="px-8 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center">
+        <button
+          onClick={async () => {
+            setSearchParams({ ...filters as any, page: currentPage });
+            getFilteredData(filters, currentPage)
+          }}
+          className="px-8 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center">
           <Search className="h-4 w-4 mr-2" />
-          Search Properties
+          Apply filters
         </button>
       </div>
     </div>

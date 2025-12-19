@@ -40,6 +40,8 @@ const initialState: PropertyState = {
     bedrooms: 0,
     bathrooms: 0,
     propertyType: '',
+    state:'',
+    localGovt:'',
     sortBy: 'newest',
   },
 
@@ -219,7 +221,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         break;
     }
 
-    dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered });
+    dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered  || []});
   };
 
   const setLoading = (loading: boolean) => {

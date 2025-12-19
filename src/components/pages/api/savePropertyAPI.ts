@@ -3,7 +3,7 @@ import { config } from "../../../config/config";
 import { ResponseType } from "../../../types";
 
 
-export const savePropertyAPI = async function savePropertyAPI(data: { propertyId: number, userId: number }) {
+export const savePropertyAPI = async function savePropertyAPI(data: { PropertyId: number, UserId: number }) {
 
     const _csrf = window.localStorage.getItem('csrf') as string;
     console.log(data);

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import Form from "form-data"; 
+import Form from "form-data";
 import { Forward } from 'lucide-react';
 import { toast } from 'sonner';
 import { Property } from '../../../../types';
 import { createPropertyAPI } from '../../api/admin/property/createPropertyAPI';
 import { useAuth } from '../../../../context/AuthContext';
+import { statesLGsInObject } from '../../../../data/stateData';
 
 const initialFormData: Property = {
     id: 1,
@@ -13,8 +14,9 @@ const initialFormData: Property = {
     location: '',
     bedrooms: 1,
     bathrooms: 1,
+    availability: false,
     area: 0,
-    type: 'apartment',
+    type: 'duplex',
     status: 'for_rent',
     images: [],
     description: '',
@@ -48,7 +50,7 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
         files: [] as Array<any>,
         avatar: {} as any
     });
-    const {admin} = useAuth();
+    const { user, admin } = useAuth();
 
     const handleChange = (e: any) => {
         const { name, value, type, checked } = e.target as any;
@@ -122,14 +124,18 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
         formData.append('agent', JSON.stringify(property.agent));
         formData.append("isFeatured", property.isFeatured);
         formData.append("isSponsored", property.isSponsored);
+        formData.append("availability", property.availability);
         formData.append("coordinates", JSON.stringify(property.coordinates));
         formData.append("address", property.address);
         formData.append('localGovt', property.localGovt);
         formData.append('state', property.state);
         formData.append('country', property.country);
-        formData.append('UserId', admin?.userId);
-        // formData.append("_csrf", _csrf);
-
+        if (user?.role === 'provider') {
+            formData.append('UserId', user?.userId);
+        } else {
+            formData.append('UserId', admin?.userId);
+            // formData.append("_csrf", _csrf);
+        }
         let propertyData = await createPropertyAPI(formData);
 
         if (propertyData) {
@@ -165,6 +171,29 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                 </div>
 
                 <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select
+                        name="type"
+                        value={property.type}
+                        onChange={e => setProperty((prev: any) => ({ ...prev, type: e.target.value }))}
+                        required
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Select</option>
+                        <option value="apartment">Apartment</option>
+                        <option value="self-contained">Self-contained</option>
+                        <option value="flat">Flat</option>
+                        <option value="house">house</option>
+                        <option value="condo">Condominium</option>
+                        <option value="villa">Villa</option>
+                        <option value="townhouse">Townhouse</option>
+                        <option value="duplex">Duplex</option>
+                        <option value="bungalow">Bungalow</option>
+                    </select>
+                </div>
+
+
+                <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
                     <input
                         name="price"
@@ -186,6 +215,19 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                         placeholder='e.g., Naibawa, Kumbotso LG, Kano State etc'
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                    <select
+                        name="availability"
+                        value={property.availability ? 'true' : 'false'}
+                        onChange={e => setProperty((prev: any) => ({ ...prev, availability: e.target.value === 'true' ? true : false }))}
+                        className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="true">Available</option>
+                        <option value="false">Not Available</option>
+                    </select>
                 </div>
 
                 <div>
@@ -239,7 +281,8 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                         <option value="for_sale">For Sale</option>
                         <option value="for_rent">For Rent</option>
                         <option value="sold">Sold</option>
-                        <option value="occupied">occupied</option>
+                        <option value="occupied">Occupied</option>
+                        <option value="for_vacation">For vacation</option>
                     </select>
                 </div>
 
@@ -258,7 +301,7 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                             } catch (error) {
                                 console.warn(error);
                             }
-                            setImages((prev: any) => ({ ...prev, files: [...e.target.files]}))
+                            setImages((prev: any) => ({ ...prev, files: [...e.target.files] }))
                             setProperty(prevProp => ({ ...prevProp, images: images }))
                         }}
                         multiple
@@ -359,6 +402,7 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Agent Photo</label>
                     <input
@@ -438,7 +482,47 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                     />
                 </div>
 
+                {/* <div className="grid grid-cols-2 gap-4"> */}
                 <div>
+                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                        State
+                    </label>
+                    <select
+                        id="state"
+                        name="state"
+                        required
+                        value={property.state}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Select State</option>
+                        {Object.keys(statesLGsInObject).map((state) => (
+                            <option key={state} value={state}>{state}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label htmlFor="localGovt" className="block text-sm font-medium text-gray-700 mb-2">
+                        Local Government
+                    </label>
+                    <select
+                        id="localGovt"
+                        name="localGovt"
+                        required
+                        value={property.localGovt}
+                        onChange={handleChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Select</option>
+                        {(statesLGsInObject[property.state])?.map((LG: any) => (
+                            <option key={LG} value={LG}>{LG}</option>
+                        ))}
+                    </select>
+                </div>
+                {/* </div> */}
+
+                {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Local Govt</label>
                     <input
                         name="localGovt"
@@ -460,7 +544,7 @@ export default function PropertyAdd({ setOpen }: { setOpen: any }) {
                         placeholder='e.g., Kano'
                         className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                </div>
+                </div> */}
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>

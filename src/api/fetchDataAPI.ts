@@ -5,9 +5,9 @@ import { ResponseType } from "../types/index.ts";
 export async function fetchDataAPI(
     url: string,
     payload: {
-        method: "POST | GET | PUT | GET | PATCH",
+        method: "POST" | "GET" | "PUT" | "GET" | "PATCH",
         body: any,
-        credentials: 'include',
+        credentials?: 'include',
         headers: any
     }) {
     try {
@@ -24,7 +24,7 @@ export async function fetchDataAPI(
         let result = await response.json() as ResponseType;
 
         if (result.status === 'success') {
-            return result.data
+            return result.data;
         }
 
         return;

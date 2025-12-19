@@ -3,12 +3,14 @@ import {
   Search, Home, Calculator, FileText, Users, Shield, 
   TrendingUp, Award, CheckCircle, Star 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface ServicesPageProps {
   onNavigate: (page: string) => void;
 }
 
-const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
+const ServicesPage: React.FC = () => {
+  const navigate = useNavigate();
   const services = [
     {
       id: 1,
@@ -272,13 +274,13 @@ const ServicesPage: React.FC<ServicesPageProps> = ({ onNavigate }) => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <button
-              onClick={() => onNavigate('contact')}
+              onClick={() => navigate('/contact')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               Contact Us
             </button>
             <button
-              onClick={() => onNavigate('properties')}
+              onClick={() => navigate('/properties')}
               className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               View Properties

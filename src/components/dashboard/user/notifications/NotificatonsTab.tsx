@@ -2,7 +2,7 @@ import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../../../context/AuthContext";
 import Pagination from "../../../common/Pagination";
-import { getUserNotificationsAPI } from "../../api/user/getUserNotifications";
+import { getNotificationsAPI } from "../../api/admin/notifications/getNotificationsAPI";
 
 export const NotificationsTab = () => {
   const [notifications, setNotifications] = useState<any>([]);
@@ -14,9 +14,9 @@ export const NotificationsTab = () => {
   useEffect(() => {
 
     (async () => {
-      const { notifications } = await getUserNotificationsAPI(user.userId,currentPage);
-      setTotalPages(notifications?.notificationCount)
-      setNotifications(notifications?.notifications);
+      const { notifications, notificationCount} = await getNotificationsAPI(currentPage);
+      setTotalPages(notificationCount)
+      setNotifications(notifications);
     })();
 
   }, [user.userId,currentPage]);
@@ -31,7 +31,7 @@ export const NotificationsTab = () => {
             <li className="p-6 text-center text-gray-500">No notifications found.</li>
           )}
           {notifications?.slice().sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((notification: any) => (
-            <li key={notification.id} className={`flex items-start px-6 py-4 ${notification?.read ? 'bg-gray-50' : 'bg-yellow-50'}`}>
+            <li key={notification.id} className={`flex items-start px-6 py-4 mb-3 ${notification?.read ? 'bg-gray-50' : 'bg-yellow-50'}`}>
               <div className="flex-shrink-0 mt-1">
                 <Bell className="h-6 w-6 text-red-500" />
               </div>

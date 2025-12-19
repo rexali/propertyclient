@@ -21,7 +21,7 @@ export async function removeMessageAPI(id: number) {
         const data = await response.json() as ResponseType;
         return {
             success: data.status === "success" ? true : false,
-            message: data.message,
+            message: data.data.message,
         };
     } catch (error: any) {
         return {

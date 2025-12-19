@@ -27,7 +27,7 @@ var users: any;
 })()
 
 
-const MessageEdit = ({ setOpenEdit, messageId }: { setOpenEdit: Function, messageId: any }) => {
+const MessageEdit = ({ setOpenEdit, messageId, setReload }: { setOpenEdit: Function, messageId: any, setReload: any }) => {
     const [form, setForm] = useState<MessageForm>(initialForm);
     const [status, setStatus] = useState<string | null>(null);
     const { user } = useAuth() as any;
@@ -45,11 +45,12 @@ const MessageEdit = ({ setOpenEdit, messageId }: { setOpenEdit: Function, messag
         if (result) {
             setStatus("Message sent!");
             setForm(initialForm);
-            setOpenEdit(false)
+            setOpenEdit(false);
+            setReload((prev: any) => prev + 1)
         }
 
     };
-    
+
     useEffect(() => {
         (async () => {
             let { message } = await getMessageAPI(messageId);

@@ -16,11 +16,11 @@ export async function updateNotificationAPI(payload: AddNotificationPayload, id:
         const response = await fetch(config.BASE_URL_LOCAL + '/api/v1/notifications/' + id, {
             credentials: 'include',
             method: 'PATCH',
+            body: JSON.stringify(payload),
             headers: {
                 'Content-Type': 'application/json',
                 "X-CSRF-Token": _csrf
             },
-            body: JSON.stringify(payload),
         });
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));

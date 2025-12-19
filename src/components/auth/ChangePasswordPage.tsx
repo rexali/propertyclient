@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { changePasswordAPI } from './api/changePasswordAPI';
+import { useNavigate } from 'react-router-dom';
 
- interface  ChangePasswordProps {
-       onNavigate: any 
-    }
-const ChangePasswordPage: React.FC<ChangePasswordProps> = ({onNavigate}) => {
+interface ChangePasswordProps {
+  onNavigate: any
+}
+
+const ChangePasswordPage: React.FC = () => {
   const [formData, setFormData] = useState({
     oldPassword: '',
     password: '',
@@ -15,6 +17,7 @@ const ChangePasswordPage: React.FC<ChangePasswordProps> = ({onNavigate}) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -181,7 +184,7 @@ const ChangePasswordPage: React.FC<ChangePasswordProps> = ({onNavigate}) => {
             <div className="mt-6">
               <a
                 href="#"
-                onClick={()=>onNavigate('user-dashboard')}
+                onClick={() => navigate('/user-dashboard')}
                 className="w-full flex justify-center text-sm font-medium text-blue-600 hover:text-blue-500"
               >
                 Back to Dashboard

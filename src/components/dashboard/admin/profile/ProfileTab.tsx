@@ -8,7 +8,7 @@ import { BASE_URL_LOCAL } from "../../../../constants/constants";
 
 const ProfileTab = () => {
 
-    const { admin } = useAuth();
+    const {user, admin } = useAuth();
     const [isEditing, setIsEditing] = useState(false);
     const [profile, setProfile] = useState<any>(admin?.profile as unknown as any || {});
     const [status, setStatus] = useState('');

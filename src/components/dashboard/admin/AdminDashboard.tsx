@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   User, Home, BarChart3, Plus, Heart, MessageCircle, Bell,
   Users, TrendingUp,
+  ShoppingBag,
 } from 'lucide-react';
 import { useProperty } from '../../../context/PropertyContext';
 import { PropertiesTab } from './property/PropertiesTab';
@@ -13,10 +14,10 @@ import SavedTab from './favourites/SavedTabs';
 import { MessagesTab } from './messages/MessagesTab';
 import { NotificationsTab } from './notifications/NotificatonsTab';
 import { getAllUsersAPI } from '../api/admin/profile/getAllUsersAPI';
-
-interface AdminDashboardProps {
-  onNavigate: (page: string, data?: any) => void;
-}
+import { useNavigate } from 'react-router-dom';
+import { BookingsTab } from './bookings/BookingsTabs';
+import { ReviewsTab } from './reviews/ReviewsTab';
+import CartsTab from './carts/CartsTab';
 
 let users = [];
 (async () => {
@@ -24,21 +25,26 @@ let users = [];
   users = data?.users;
 })();
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
+const AdminDashboard: React.FC = () => {
   const { admin, logout } = useAuth();
   const { properties } = useProperty();
   const [activeTab, setActiveTab] = useState('profile');
+  const navigate = useNavigate();
 
   const tabs = [
-    { id: 'profile', name: 'Admin Profile', icon: User },
+    { id: 'profile', name: 'Profile', icon: User },
     { id: 'properties', name: 'Properties', icon: Home },
-    { id: 'add-property', name: 'Add Property', icon: Plus },
-    { id: 'favorites', name: 'Favorite Properties', icon: Heart },
+    { id: 'bookings', name: 'Bookings', icon: Home },
+    { id: 'add-property', name: 'Property', icon: Plus },
+    { id: 'favorites', name: 'Favorites', icon: Heart },
     { id: 'messages', name: 'Messages', icon: MessageCircle },
     { id: 'notifications', name: 'Notifications', icon: Bell },
-    { id: 'users', name: 'Registered Users', icon: Users },
+    { id: 'users', name: 'Users', icon: Users },
+    { id: 'reviews', name: 'Reviews', icon: Home },
+    { id: 'carts', name: 'Carts', icon: ShoppingBag },
     { id: 'reports', name: 'Reports', icon: BarChart3 },
     { id: 'analysis', name: 'Analysis', icon: TrendingUp },
+
     // { id: 'sales', name: 'Sales Progress', icon: TrendingUp }
   ];
 
@@ -54,17 +60,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
       case 'profile':
         return <ProfileTab />;
       case 'properties':
-        return <PropertiesTab onNavigate={onNavigate} />;
+        return <PropertiesTab onNavigate={navigate} />;
+      case 'bookings':
+        return <BookingsTab />;
       case 'add-property':
         return <PropertyAdd setOpen={undefined} />;
       case 'favorites':
-        return <SavedTab onNavigate={onNavigate} />;
+        return <SavedTab onNavigate={navigate} />;
       case 'messages':
         return <MessagesTab />;
       case 'notifications':
         return <NotificationsTab />;
       case 'users':
         return <UsersTab />;
+      case 'reviews':
+        return <ReviewsTab />;
+      case 'carts':
+        return <CartsTab onNavigate={navigate} />;
       case 'reports':
         return (
           <div>
@@ -90,13 +102,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
     }
   };
 
-  if (!admin) {
+  if (!admin?.role) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Admin access required</h2>
           <button
-            onClick={() => onNavigate('admin-login')}
+            onClick={() => navigate('/admin-login')}
             className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             Admin Login

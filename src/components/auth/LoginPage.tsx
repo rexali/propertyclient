@@ -6,14 +6,14 @@ import { loginAPI } from './api/loginAPI';
 import { verifyTokenAPI } from './api/verifyTokenAPI';
 import { registerAPI } from './api/registerAPI';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { statesLGsInObject} from '../../data/stateData';
 
-interface LoginPageProps {
-  onNavigate: (page: string) => void;
-}
 
-const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
+const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,33 +22,41 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
     localGovt: '',
     address: '',
     state: '',
-    country: '',
+    country: 'Nigeria',
+    role: ''
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const { loginUser } = useAuth();
+  const { loginUser, loginAdmin } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-
+    toast("Sending data..")
     if (isLogin) {
-      // Login logic
-      // const user = mockUsers.find(u => u.email === formData.email);
-      let token = await loginAPI({ password: formData.password, username: formData.email });
-      if (token) {
-          toast("User authenticated,. Wait ..")
-        let user = await verifyTokenAPI(token);
-        if (user) {
-          toast("User verified")
-          loginUser(user);
-          onNavigate('user-dashboard');
+      try {
+        let token = await loginAPI({ password: formData.password, username: formData.email });
+        if (token) {
+          toast("User authenticated.. Wait ..")
+          let user = await verifyTokenAPI(token);
+          if (user?.role?.toLowerCase() === 'user' || 'provider') {
+            toast("User verified");
+            loginUser(user);
+            navigate('/user-dashboard');
+          } else if (user?.role.toLowerCase() === 'admin') {
+            toast("Admin verified");
+            loginAdmin(user);
+            navigate('/admin-dashboard');
+          } else {
+            setErrors({ email: 'User not found.' });
+            toast("User not verified");
+          }
         } else {
-          setErrors({ email: 'User not found.' });
-          toast("User not verified")
-        }
-      } else{
           toast("User not authenticated")
+        }
+      } catch (error: any) {
+        toast("Error! " + error.message)
       }
+
 
     } else {
       // Registration logic
@@ -61,25 +69,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
         localGovt: formData.localGovt,
         state: formData.state,
         country: formData.country,
-        role: "user",
-        permissions: ['write'],
+        role: formData.role.startsWith('provider') ? "provider" : 'user',
+        permissions: ['write','read'],
         status: 'no'
       };
       let result = await registerAPI(newUser);
       if (result) {
         toast("Registration successful.");
-        onNavigate('home');
+        navigate('/');
       } else {
         toast("Registration failed!");
       }
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+
     // Clear error when user starts typing
     if (errors[e.target.name]) {
       setErrors({
@@ -111,7 +121,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             {!isLogin && (
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
+                  Name or Business Name
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -128,6 +138,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                 </div>
               </div>
             )}
+
+            {!isLogin && <div>
+              <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+                Your Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select</option>
+                <option key={'user'} value={'user'}>Customer/Client</option>
+                <option key={'landlord'} value={'provider-1'}>Landlord</option>
+                <option key={'property-manager'} value={'provider-2'}>Property Manager</option>
+                <option key={'estate-manager'} value={'provider-3'}>Real Estate Manager</option>
+                <option key={'estate-manager'} value={'provider-4'}>Agent</option>
+              </select>
+            </div>}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -161,7 +192,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1 flex flex-row justify-between">
                 Password
-                {isLogin && <a href="#" onClick={() => onNavigate('forget-password')}>Forget Password</a>}
+                {isLogin && <a href="#" onClick={() => navigate('/forget-password')}>Forget Password</a>}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -224,7 +255,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                <div>
+                {/* <div>
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                     Local Govt.
                   </label>
@@ -240,23 +271,50 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
                       placeholder="Enter your address"
                     />
                   </div>
-                </div>
+                </div> */}
 
-                <div className="grid grid-cols-2 gap-4">
+                {!isLogin && (<div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
                       State
                     </label>
-                    <input
+                    <select
                       id="state"
                       name="state"
-                      type="text"
+                      required
                       value={formData.state}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="State"
-                    />
+                    >
+                      <option value="">Select State</option>
+                      {Object.keys(statesLGsInObject).map((state) => (
+                        <option key={state} value={state}>{state}</option>
+                      ))}
+                    </select>
                   </div>
+
+                  <div>
+                    <label htmlFor="localGovt" className="block text-sm font-medium text-gray-700 mb-2">
+                      Local Government
+                    </label>
+                    <select
+                      id="localGovt"
+                      name="localGovt"
+                      required
+                      value={formData.localGovt}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select</option>
+                      {(statesLGsInObject[formData.state])?.map((LG: any) => (
+                        <option key={LG} value={LG}>{LG}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>)}
+
+                <div className="grid grid-cols-1 gap-4">
+                
                   <div>
                     <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
                       Country
@@ -301,7 +359,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onNavigate }) => {
           <div className="text-center">
             <button
               type="button"
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('/home')}
               className="text-gray-600 hover:text-gray-800 text-sm"
             >
               ← Back to Home

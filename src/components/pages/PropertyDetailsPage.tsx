@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import {
   ChevronLeft, ChevronRight, Heart, Share2, MapPin, Bed, Bath, Square,
-  Car, Wifi, Dumbbell, Waves, Shield, Phone, Mail, MessageCircle,
+  Car, Wifi, Dumbbell, Waves, Shield, Phone, MessageCircle,
   Facebook, Twitter, Copy, Star,
   Send,
-  MailIcon
+  MailIcon,
+  CreditCard,
+  Plus,
+  ShoppingCartIcon
 } from 'lucide-react';
 import { useProperty } from '../../context/PropertyContext';
 import { useAuth } from '../../context/AuthContext';
@@ -15,27 +18,83 @@ import { removeSavedPropertyAPI } from './api/removeSavedProperty';
 import { getPropertyAPI } from './api/getPropertyAPI';
 import { handleViewLocation } from '../../utils/handleViewLocation';
 import { addMessageAPI } from '../dashboard/api/admin/messages/addMessageAPI';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { handleSimpleShare } from '../../utils/handleSimpleShare';
+import { ReviewList } from './components/ReviewList';
+import ReviewAdd from './components/ReviewAdd';
+import { makePaymentWithPopupAPI } from './payment/makePaymentWithPopupAPI';
+import { fetchDataAPI } from '../../api/fetchDataAPI';
+import { isExistingAPI } from './api/isExistingAPI';
 
-interface PropertyDetailsPageProps {
-  propertyId: number;
-  onNavigate: (page: string, data?: any) => void;
-}
-
-const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, onNavigate }) => {
-  const { isAuthenticated, user } = useAuth();
+const PropertyDetailsPage: React.FC = () => {
+  const { isAuthenticated, user, admin } = useAuth();
   const { favorites, addFavorite, removeFavorite, setProperty, property } = useProperty();
-  
+  const params = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const propertyId = params.id || location.state;
+
   const initialMessage = {
-    recipient: property?.UserId || '', // agentId or email
-    sender: user?.userId || '',  // userId
+    recipientId: property?.UserId || '', // agentId or email
+    senderId: user?.userId || admin?.userId || '',  // user, userId
     subject: '',
-    content: ''
+    content: '',
+    PropertyId: propertyId || '',
+    UserId: user?.userId || admin?.userId || '',
   };
+
+  const [checkInCheckOutForm, setCheckInCheckOutForm] = useState(false);
+  const [checkInCheckOutData, setCheckInCheckOutData] = useState({
+    checkIn: '',
+    checkOut: '',
+    propertyId: '',
+    propertyPrice: 0,
+    userId: user?.userId
+  });
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactMessage, setContactMessage] = useState(initialMessage);
   const isFavorite = favorites.includes(property?.id as any);
+
+
+  async function handleSend(): Promise<void> {
+    window.localStorage.setItem('checkoutData', JSON.stringify(checkInCheckOutData));
+    setCheckInCheckOutForm(false);
+    await handleContineCheckOut(checkInCheckOutData.propertyId, checkInCheckOutData.propertyPrice);
+    setTimeout(() => {
+      setCheckInCheckOutData(prev => ({
+        ...prev,
+        propertyPrice: 0,
+        checkIn: '',
+        checkOut: '',
+        propertyId: '',
+      }))
+    }, 3000);
+
+  }
+
+  async function handleContineCheckOut(propertyId: string, propertyPrice: number): Promise<void> {
+    console.log(JSON.parse(window.localStorage.getItem('checkoutData') || '{}'));
+
+    await makePaymentWithPopupAPI({
+      propertyId,
+      amount: propertyPrice,
+      userId: user?.userId || admin?.userId,
+      email: user?.email
+    });
+  }
+
+  function handleChangeCheckInCheckOut(event: ChangeEvent<HTMLInputElement>, propertyId: string, propertyPrice: number): void {
+    const { name, value } = event.target;
+    setCheckInCheckOutData(prev => ({
+      ...prev,
+      propertyId,
+      propertyPrice,
+      [name]: value
+    }))
+
+  }
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -87,16 +146,18 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
 
   const handleFavoriteClick = async (propertyId: number, userId: number) => {
     if (!isAuthenticated) {
-      toast("Please login to save favorite properties");
+      toast("Please login to save a property");
       return;
     }
-    if (isFavorite) {
+    let { success } = await isExistingAPI(userId, propertyId, 'favourites');
+
+    if (success) {
       if (await removeSavedPropertyAPI({ propertyId, userId })) {
         toast("Property removed!");
         removeFavorite(String(property?.id));
       }
     } else {
-      if (await savePropertyAPI({ propertyId, userId })) {
+      if (await savePropertyAPI({ PropertyId: propertyId, UserId: userId })) {
         toast("Property added!");
         addFavorite(property?.id as any);
       }
@@ -146,6 +207,38 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
     }
   };
 
+
+
+  async function addPropertyToCartAPI(id: number, userId: string | undefined) {
+    if (!isAuthenticated) {
+      toast('Please login first!');
+      return;
+    }
+    let { success } = await isExistingAPI(userId, id, 'carts');
+
+    if (success) {
+      let result = await fetchDataAPI(
+        BASE_URL_LOCAL + '/api/v1/carts',
+        {
+          method: "POST",
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ PropertyId: id, UserId: userId })
+        });
+
+      if (result.cart) {
+        toast('Success! Property added');
+        return;
+      }
+      toast('Fail! No Property added');
+    } else {
+      toast('Property already added');
+    }
+
+
+
+  }
+
   const amenityIcons: { [key: string]: any } = {
     'City View': MapPin,
     'Gym': Dumbbell,
@@ -176,24 +269,18 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
     (async () => {
       let data = await getPropertyAPI(propertyId);
       setProperty({
-        ...data,
-        agent: {
-          ...JSON.parse(data?.agent as any) || {}
-        },
-        // coordinates: {
-        //     ...JSON.parse(coordinates as any)
-        // }
+        ...data
       })
+
     })();
   }, [propertyId])
-
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Back Button */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <button
-          onClick={() => onNavigate('properties')}
+          onClick={() => navigate('/properties')}
           className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
         >
           <ChevronLeft className="h-5 w-5 mr-1" />
@@ -232,9 +319,9 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
 
             {/* Status Badge */}
             {property?.status !== 'for_sale' && (
-              <div className={`absolute top-4 left-4 px-4 py-2 rounded-full text-white font-bold ${property?.status === 'sold' ? 'bg-red-500' : 'bg-yellow-500'
+              <div className={`absolute top-4 left-4 px-4 py-2 rounded-full text-white font-bold ${property?.status === 'sold' ? 'bg-red-500' : 'bg-green-500'
                 }`}>
-                {property?.status.toUpperCase()}
+                {property?.status.replace('_', ' ').toUpperCase()}
               </div>
             )}
 
@@ -257,7 +344,9 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                 <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
               </button>
               <div className="relative group">
-                <button className="p-3 bg-white/90 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all duration-200">
+                <button
+                  onClick={() => handleSimpleShare(property)}
+                  className="p-3 bg-white/90 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all duration-200">
                   <Share2 className="h-5 w-5" />
                 </button>
                 <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block">
@@ -310,9 +399,23 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                   <span className="text-3xl font-bold text-blue-600">{formatPrice(property?.price)}</span>
                 </div>
 
-                <div className="flex items-center text-gray-600 mb-6">
-                  <MapPin className="h-5 w-5 mr-2" />
-                  <span className="text-lg">{property?.location}</span>
+                <div className="flex justify-between text-gray-600">
+                  <div className="flex items-center text-gray-600 mb-6">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    <span className="text-lg">{property?.location}</span>
+                  </div>
+                  {/* ratings */}
+                  <div className="flex items-center space-x-1">
+                    {property?.rating === 0 && <Star className="h-4 w-4 text-yellow-400 fill-current" />}
+                    {[...Array(property?.rating)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${i < property?.rating ? "text-yellow-400" : "text-gray-300"}`}
+                        fill={i < property?.rating ? "#facc15" : "none"}
+                      />
+                    ))}
+                    <span className="text-sm text-gray-600">{property?.rating}</span>
+                  </div>
                 </div>
 
                 {/* Property Details */}
@@ -339,7 +442,8 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                 {/* Description */}
                 <div className="mb-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-                  <p className="text-gray-700 leading-relaxed">{property?.description}</p>
+                  <p className="text-gray-700 leading-relaxed">{property?.description}</p><br />
+                  <p className="text-gray-700 leading-relaxed">SKU: {property?.sku ?? ''}</p>
                 </div>
 
                 {/* Amenities */}
@@ -432,7 +536,7 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                         Call Agent
                       </button>
                       <button
-                        onClick={()=>{
+                        onClick={() => {
                           handleContactAgent()
                         }}
                         className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
@@ -447,19 +551,47 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <h3 className="font-bold text-lg text-gray-900 mb-4">Quick Actions</h3>
                     <div className="space-y-3">
+                      {property.status === 'for_vacation' && (
+                        <button
+                          onClick={() => {
+                            // setCheckInCheckOutForm(true);
+                            navigate('/checkout/' + property.id);
+                          }}
+                          className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+
+                        // className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"   
+                        >
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          <span className="text-sm">Book Now</span>
+                        </button>
+                      )}
+                      {property.status === 'for_vacation' && (
+                        <button
+                          onClick={async () => {
+                            await addPropertyToCartAPI(property.id, user?.userId);
+                          }}
+                          className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+
+                        // className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                        >
+                          <span className="text-sm"><Plus className="h-4 w-4" /></span>
+                          <ShoppingCartIcon className="h-4 w-4" />
+                        </button>
+                      )}
+
                       <button
                         id='position'
                         onClick={() => {
-                          handleViewLocation(property.location);
+                          handleViewLocation(property?.location);
                         }}
                         className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                       >
                         <MapPin className="h-4 w-4 mr-1" /> <span>View on Map</span>
                       </button>
                       <button
-                        id='position'
+                        id='location'
                         onClick={() => {
-                          handleViewLocation(property.location);
+                          handleViewLocation(property?.location);
                         }}
                         className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                       >
@@ -467,12 +599,26 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                       </button>
                       <button
                         onClick={() => {
-                          onNavigate('contact')
+                          if (!isAuthenticated) {
+                            toast("Please login first to before you schedule a visit");
+                            return;
+                          }
+                          navigate('/contact')
                         }
                         }
                         className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                       >
                         Schedule Viewing
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          navigate('/providers/' + property.UserId)
+                        }
+                        }
+                        className="w-full flex items-center justify-center px-4 py-3 bg-green-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                      >
+                        View more from {property?.User?.Profile?.name ?? 'Provider'}
                       </button>
                     </div>
                   </div>
@@ -500,7 +646,7 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                       <div className="flex justify-between">
                         <span className="text-gray-600">Status:</span>
                         <span className={`font-medium capitalize ${property?.status === 'for_sale' ? 'text-green-600' :
-                          property?.status === 'sold' ? 'text-red-600' : 'text-yellow-600'
+                          property?.status === 'sold' ? 'text-red-600' : 'text-green-600'
                           }`}>
                           {property?.status.replace('_', ' ').toUpperCase()}
                         </span>
@@ -511,6 +657,16 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
               </div>
             </div>
           </div>
+          {/* Review section */}
+          <ReviewList reviews={property?.Reviews as any || [{
+            id: '1',
+            PropertyId: 1,
+            reviewer: 'anonymous',
+            content: 'Good one',
+            rating: 4,
+            createdAt: '12-8-2025'
+          }]} />
+          <ReviewAdd propertyId={propertyId} />
         </div>
       </div>
 
@@ -538,7 +694,7 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                 type="text"
                 name="email"
                 disabled
-                value={user?.email}
+                value={user?.email || admin?.email}
                 className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -580,6 +736,55 @@ const PropertyDetailsPage: React.FC<PropertyDetailsPageProps> = ({ propertyId, o
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
               >
                 Send Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Contact Form Modal */}
+      {checkInCheckOutForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Enter Check in and Check out date?</h3>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Check in</label>
+              <input
+                type="date"
+                name="checkIn"
+                onChange={(e) => handleChangeCheckInCheckOut(e, property.id as any, property.price)}
+                value={checkInCheckOutData.checkIn}
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Check out</label>
+              <input
+                type="date"
+                name="checkOut"
+                onChange={(e) => handleChangeCheckInCheckOut(e, property.id as any, property.price)}
+                value={checkInCheckOutData.checkOut}
+                className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setCheckInCheckOutForm(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSend}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              >
+                Continue to Checkout
               </button>
             </div>
           </div>

@@ -13,8 +13,8 @@ export interface Property {
   bedrooms: number;
   bathrooms: number;
   area: number;
-  type: 'apartment' | 'house' | 'condo' | 'villa' | 'townhouse';
-  status: 'for_sale' | 'sold' | 'occupied' | 'for_rent';
+  type: 'apartment' | 'house' | 'condo' | 'villa' | 'townhouse' | 'flat' | 'self-contained' | 'duplex' | 'bungalow';
+  status: 'for_sale' | 'sold' | 'occupied' | 'for_rent' | 'for_vacation';
   images: string[];
   description: string;
   amenities: string[];
@@ -32,8 +32,11 @@ export interface Property {
   address: string,
   localGovt: string,
   state: string,
-  country: string
-
+  country: string,
+  sku?:string;
+  Reviews?:any,
+  rating?:any,
+  availability?:boolean
 }
 
 export interface Agent {
@@ -53,6 +56,7 @@ export interface User {
   state?: string;
   country?: string;
   avatar?: string;
+  role: 'user' | 'provider';
   favorites?: string[];
   createdAt?: string;
 }
@@ -92,6 +96,8 @@ export interface Notification {
 
 export interface FilterOptions {
   location: string;
+  state?: string;
+  localGovt?: string;
   minPrice: number;
   maxPrice: number;
   bedrooms: number;

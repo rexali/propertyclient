@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Forward, MessageCircle } from "lucide-react";
+import { Forward } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
 import { addMessageAPI } from "../../api/admin/messages/addMessageAPI";
 import { getAllUsersAPI } from "../../api/admin/profile/getAllUsersAPI";
@@ -9,21 +9,21 @@ interface MessageForm {
     subject: string;
     content: string;
     recipientId: string;
-    senderId: string
+    UserId: string
 }
 
 const initialForm: MessageForm = {
     subject: "",
     content: "",
     recipientId: "",
-    senderId: ""
+    UserId: ""
 };
 
-const MessageAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
+const MessageAdd = ({ setOpenAdd, recipientId, setReload }: { setOpenAdd: Function, setReload: any, recipientId?: any }) => {
     const [form, setForm] = useState<MessageForm>(initialForm);
     const [status, setStatus] = useState<string | null>(null);
-    const [users,setUsers]=useState<Array<any>>([]);
-    const { user } = useAuth() as any;
+    const [users, setUsers] = useState<Array<any>>([]);
+    const { user, admin } = useAuth();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -33,14 +33,12 @@ const MessageAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("Sending message...");
-        // TODO: Integrate with API or state management
-        console.log({ ...form, senderId: user?.userId });
-
-        let result = await addMessageAPI({ ...form, senderId: user?.userId });
+        let result = await addMessageAPI({ ...form, senderId: user?.userId || admin?.userId, UserId: user?.userId || admin?.userId, recipientId });
         if (result) {
             setStatus("Message sent!");
             setForm(initialForm);
-            setOpenAdd(false)
+            setOpenAdd(false);
+            setReload((prv: any) => prv + 1);
         }
 
     };
@@ -49,6 +47,7 @@ const MessageAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
         (async () => {
             let result = await getAllUsersAPI();
             setUsers(result.users);
+            setForm(prev => ({ ...prev, recipientId }))
         })()
     }, [user?.userId])
 
@@ -58,8 +57,7 @@ const MessageAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
             className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow space-y-6"
         >
             <h2 className="text-2xl font-bold mb-4 text-gray-900 text-center flex items-center justify-between gap-2">
-                Add Message
-                <MessageCircle className="h-7 w-7 text-blue-500" />
+                New Message
                 <span onClick={() => setOpenAdd(false)}><Forward /></span>
             </h2>
             <div>
@@ -73,7 +71,7 @@ const MessageAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
                     required
                 />
             </div>
-            <div> 
+            <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                 <textarea
                     name="content"
@@ -94,17 +92,17 @@ const MessageAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
                     required
                 >
                     <option defaultValue={form.recipientId} disabled>Select recipient</option>
-                    {user.role === "admin" ?
+                    {admin?.role === "admin" ?
                         users?.filter((u: any) => u.role !== 'admin').map((usr: any) => (
                             (<option key={usr.id} value={usr.id}>
                                 {usr.username || usr.id}
                             </option>)
                         ))
                         :
-                        users?.filter((u: any) => u.role === 'admin').map((usr: any) => 
-                            (<option key={usr.id} value={usr.id}>
-                                {usr.username || usr.id}
-                            </option>)
+                        users?.filter((u: any) => u.role === 'admin').map((usr: any) =>
+                        (<option key={usr.id} value={usr.id}>
+                            {usr.username || usr.id}
+                        </option>)
                         )
                     }
                 </select>

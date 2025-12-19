@@ -1,11 +1,13 @@
 import React from 'react';
 import { Home, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface FooterProps {
-  onNavigate: (page: string) => void;
+  onNavigatex: (page: string) => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
+const Footer: React.FC = () => {
+  const navigate = useNavigate();
   
   const quickLinks = [
     { name: 'Home', href: 'home' },
@@ -69,7 +71,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <button
-                    onClick={() => onNavigate(link.href)}
+                    onClick={() => navigate('/'+link.href)}
                     className="text-gray-300 hover:text-white transition-colors duration-200"
                   >
                     {link.name}
@@ -86,7 +88,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               {propertyTypes.map((type) => (
                 <li key={type.name}>
                   <button
-                    onClick={() => onNavigate(type.href)}
+                    onClick={() => navigate('/'+type.href)}
                     className="text-gray-300 hover:text-white transition-colors duration-200"
                   >
                     {type.name}
@@ -105,7 +107,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               return (
                 <a
                   key={social.name}
-                  href={social.href}
+                  href={'/'+social.href}
                   className="p-2 bg-gray-800 rounded-full hover:bg-blue-600 transition-colors duration-200"
                   aria-label={social.name}
                 >

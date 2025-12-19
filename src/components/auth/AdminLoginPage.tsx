@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Shield, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-// import { mockAdmins } from '../../data/mockData';
 import { loginAPI } from './api/loginAPI';
 import { verifyTokenAPI } from './api/verifyTokenAPI';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
-interface AdminLoginPageProps {
-  onNavigate: (page: string) => void;
-}
-
-const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onNavigate }) => {
+const AdminLoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -18,28 +14,35 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onNavigate }) => {
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const { loginAdmin } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+    toast("Sending data..");
+    try {
+      // get token
+      let token = await loginAPI({ password: formData.password, username: formData.email });
 
-    let token = await loginAPI({ password: formData.password, username: formData.email });
-    if (token) {
-      toast("User authenticated,. Wait ..")
-      let admin = await verifyTokenAPI(token);
-      if (admin) {
-        toast("Admin verified")
-        loginAdmin(admin);
-        onNavigate('admin-dashboard');
+      if (token) {
+        toast("User authenticated,. Wait ..");
+
+        let adminUser = await verifyTokenAPI(token);
+
+        if (adminUser.role==='admin') {
+          toast("Admin verified");
+          loginAdmin(adminUser);
+          navigate('/admin-dashboard');
+        } else {
+          setErrors({ email: 'Admin not found.' });
+        }
       } else {
-        setErrors({ email: 'Admin not found.' });
-        toast("Admin failed verification")
+        setErrors({ email: 'Admin failed authentication.' });
       }
-    } else {
-      toast("Admin failed authentication")
+
+    } catch (error: any) {
+      setErrors({ email: error.message })
     }
-
-
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -148,14 +151,14 @@ const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onNavigate }) => {
           <div className="text-center space-y-2">
             <button
               type="button"
-              onClick={() => onNavigate('login')}
+              onClick={() => navigate('/login')}
               className="text-blue-600 hover:text-blue-700 font-medium block"
             >
               Sign in as User instead
             </button>
             <button
               type="button"
-              onClick={() => onNavigate('home')}
+              onClick={() => navigate('/home')}
               className="text-gray-600 hover:text-gray-800 text-sm"
             >
               ← Back to Home

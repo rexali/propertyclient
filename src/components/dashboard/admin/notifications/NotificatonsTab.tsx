@@ -1,5 +1,5 @@
 import { Bell, Edit, Plus, Trash } from "lucide-react";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import NotificationAdd from "./NotificationAdd";
 import NotificationEdit from "./NotificationEdit";
 import { getNotificationsAPI } from "../../api/admin/notifications/getNotificationsAPI";
@@ -14,15 +14,18 @@ export const NotificationsTab = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [read, setRead] = useState<boolean>();
+  const [reload, setReload] = useState(0);
+  const itemsPerPage = 10;
+
 
   useEffect(() => {
     (async () => {
-      const { notifications } = await getNotificationsAPI(currentPage);
-      setRead(notifications.read);
-      setTotalPages(notifications?.notificationCount)
-      setNotifications(notifications.notifications);
+      const { notifications, read, notificationCount } = await getNotificationsAPI(currentPage);
+      setRead(read);
+      setTotalPages(Math.ceil(notificationCount / itemsPerPage));
+      setNotifications(notifications);
     })();
-  }, [currentPage]);
+  }, [reload, currentPage]);
 
 
   async function handleRemoveNotification(id: any) {
@@ -41,12 +44,12 @@ export const NotificationsTab = () => {
   }
 
   if (openAdd) {
-    return <NotificationAdd setOpenAdd={setOpenAdd} />
+    return <NotificationAdd setOpenAdd={setOpenAdd} setReload={setReload} />
   }
 
 
   if (openEdit) {
-    return <NotificationEdit setOpenEdit={setOpenEdit} notificationId={notificationId} />
+    return <NotificationEdit setOpenEdit={setOpenEdit} notificationId={notificationId} setReload={setReload} />
   }
 
 

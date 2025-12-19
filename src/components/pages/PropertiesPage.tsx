@@ -1,84 +1,70 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Grid3X3, List, MapPin, Filter } from 'lucide-react';
 import PropertyCard from '../common/PropertyCard';
 import SearchFilters from '../search/SearchFilters';
 import { useProperty } from '../../context/PropertyContext';
-import { Property } from '../../types';
 import { BASE_URL_LOCAL } from '../../constants/constants';
+import {
+  useNavigate,
+} from 'react-router-dom';
+import { SimplePagination } from '../common/SimplePagination';
+import { searchPropertiesAPI } from './api/searchPropertiesAPI';
 
-interface PropertiesPageProps {
-  onNavigate: (page: string, data?: any) => void;
-}
-
-const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
-  const {filteredProperties, filters, setFilters, filterProperties } = useProperty();
+const PropertiesPage: React.FC = () => {
+  const {
+    filters,
+    setFilters,
+    filterProperties,
+  } = useProperty();
+  const [propertys, setPropertys] = useState<any>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
+  const [totalProperties, setTotalProperties] = useState(4);
+  const navigate = useNavigate();
+  const sponsoredListing = propertys?.filter((property: any) => property.isFeatured === true || property.isSponsored === true) || [];
 
-  // Apply filters when component mounts or filters change
+  // const [searchParams, _] = useSearchParams();
+  // get search params
+  // const _searchParams = {
+  //   location: searchParams.get('location') || '',
+  //   minPrice: searchParams.get('minPrice') || '0',
+  //   maxPrice: searchParams.get('maxprice') || '10000000',
+  //   bedrooms: searchParams.get('bedrooms') || '0',
+  //   bathrooms: searchParams.get('bathrooms') || '0',
+  //   type: searchParams.get('propertyType') || '',
+  //   sortBy: searchParams.get('newest') || 'newest',
+  // };
+
+  const itemsPerPage = 4;
+  const totalPages = Math.ceil(totalProperties / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+
+
+  const getFilteredData = useCallback(async (filters: any, currentPage: number = 1) => {
+    let result = await searchPropertiesAPI({ ...filters, page: currentPage })
+    setPropertys(result?.properties || []);
+    setTotalProperties(result?.propertyCount || 0)
+  }, [currentPage])
+
   React.useEffect(() => {
     filterProperties();
-  }, [filters]);
+    getFilteredData(filters, currentPage);
+  }, [currentPage]);
 
-  const handleViewProperty = (property: Property) => {
-    onNavigate('property-details', property);
+  const handleViewProperty = (value: any) => {
+    navigate('/properties/' + value, { state: value });
   };
 
-  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentProperties = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
-
-  const Pagination = () => {
-    if (totalPages <= 1) return null;
-
-    return (
-      <div className="flex justify-center items-center space-x-2 mt-8">
-        <button
-          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Previous
-        </button>
-        
-        {[...Array(totalPages)].map((_, index) => {
-          const page = index + 1;
-          return (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-2 text-sm font-medium border rounded-md ${
-                currentPage === page
-                  ? 'text-white bg-blue-600 border-blue-600'
-                  : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {page}
-            </button>
-          );
-        })}
-        
-        <button
-          onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-          disabled={currentPage === totalPages}
-          className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Next
-        </button>
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Properties for Sale</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Properties</h1>
           <p className="text-lg text-gray-600">
-            {filteredProperties.length} properties found
+            {totalProperties} properties found
           </p>
         </div>
 
@@ -99,9 +85,11 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
             <div className="sticky top-8">
               <SearchFilters
                 filters={filters}
-                onFiltersChange={setFilters} 
-                onNavigate={onNavigate}            
-                />
+                onFiltersChange={setFilters}
+                onNavigate={navigate}
+                getFilteredData={getFilteredData}
+                currentPage={currentPage}
+              />
             </div>
           </div>
 
@@ -110,26 +98,24 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
             {/* View Mode Toggle and Results Info */}
             <div className="flex justify-between items-center mb-6">
               <div className="text-sm text-gray-600">
-                Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredProperties.length)} of {filteredProperties.length} results
+                Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, totalProperties)} of {totalProperties} results
               </div>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg ${
-                    viewMode === 'grid'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className={`p-2 rounded-lg ${viewMode === 'grid'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
                 >
                   <Grid3X3 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg ${
-                    viewMode === 'list'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
+                  className={`p-2 rounded-lg ${viewMode === 'list'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                    }`}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -137,7 +123,7 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
             </div>
 
             {/* No Results */}
-            {currentProperties.length === 0 && (
+            {propertys?.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-gray-500 mb-4">
                   <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -147,10 +133,28 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
               </div>
             )}
 
+            {/* Sponsored Properties Grid View */}
+            {viewMode === 'grid' && totalProperties > 0 && (
+              <div>
+                <h6 className="text-xs text-gray-900 mb-2">Sponsored</h6>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {sponsoredListing?.map((property: any) => (
+                    <PropertyCard
+                      key={property.id}
+                      property={property}
+                      onViewDetails={handleViewProperty}
+                    />
+                  ))}
+                </div><br /><br />
+              </div>
+            )}
+
+            <h5 className="text-1xl text-gray-900 mb-2">Properties</h5>
+
             {/* Properties Grid View */}
-            {viewMode === 'grid' && currentProperties.length > 0 && (
+            {viewMode === 'grid' && totalProperties > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {currentProperties.map((property) => (
+                {propertys?.map((property: any) => (
                   <PropertyCard
                     key={property.id}
                     property={property}
@@ -161,17 +165,16 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
             )}
 
             {/* Properties List View */}
-            {viewMode === 'list' && currentProperties.length > 0 && (
+            {viewMode === 'list' && totalProperties > 0 && (
               <div className="space-y-6">
-                {currentProperties.map((property) => (
+                {propertys?.map((property: any) => (
                   <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="flex flex-col sm:flex-row">
                       <div className="sm:w-80 h-48 sm:h-auto relative">
                         <img
-                          // src={property.images[0]}
                           src={property.images[0] ? BASE_URL_LOCAL + "/uploads/" + property.images[0] : property.images[0]}
                           alt={property.title}
-                          style={{height:210}}
+                          style={{ height: 210 }}
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                           crossOrigin=''
                         />
@@ -214,10 +217,10 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
                             <span className="text-sm text-gray-600">{property.agent.name}</span>
                           </div>
                           <button
-                            onClick={() => handleViewProperty(property)}
+                            onClick={() => handleViewProperty(property.id)}
                             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                           >
-                            View Details
+                            View
                           </button>
                         </div>
                       </div>
@@ -228,7 +231,7 @@ const PropertiesPage: React.FC<PropertiesPageProps> = ({onNavigate }) => {
             )}
 
             {/* Pagination */}
-            <Pagination />
+            <SimplePagination setCurrentPage={setCurrentPage} totalPages={totalPages} currentPage={currentPage} />
           </div>
         </div>
       </div>

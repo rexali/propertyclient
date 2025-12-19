@@ -17,8 +17,10 @@ export async function getNotificationsAPI(page:number) {
         }
         const data = await response.json() as ResponseType;
         return {
-            success: true,
-            notifications: data.data,
+            success: data.status==='success',
+            notifications: data.data?.notifications,
+            notificationCount: data.data?.notificationCount,
+            read: data.data?.read,
         };
     } catch (error: any) {
         return {

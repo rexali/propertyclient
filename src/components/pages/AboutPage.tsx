@@ -1,14 +1,12 @@
 import React from 'react';
 import { 
   Users, Award, TrendingUp, Heart, Shield, Star, 
-  MapPin, Phone, Mail, Linkedin, CheckCircle 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface AboutPageProps {
-  onNavigate: (page: string) => void;
-}
+const AboutPage: React.FC = () => {
+  const navigate = useNavigate();
 
-const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
   const values = [
     {
       title: 'Integrity',
@@ -332,13 +330,13 @@ const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <button
-              onClick={() => onNavigate('contact')}
+              onClick={() => navigate('/contact')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               Get in Touch
             </button>
             <button
-              onClick={() => onNavigate('properties')}
+              onClick={() => navigate('/properties')}
               className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 rounded-lg font-semibold transition-colors duration-200"
             >
               View Properties

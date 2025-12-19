@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react';
 
 import { confirmRegistrationAPI } from './api/confirmRegistrationAPI';
+import { useNavigate } from 'react-router-dom';
 
 interface ConfirmRegistrationProps {
     onNavigate: any
 }
 
-const ConfirmRegistrationPage: React.FC<ConfirmRegistrationProps> = ({ onNavigate }) => {
+const ConfirmRegistrationPage: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -16,6 +17,7 @@ const ConfirmRegistrationPage: React.FC<ConfirmRegistrationProps> = ({ onNavigat
         email: '',
         rcode: ''
     });
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Try to get email and confirmation code from URL parameters
@@ -56,7 +58,7 @@ const ConfirmRegistrationPage: React.FC<ConfirmRegistrationProps> = ({ onNavigat
             if (response?.success) {
                 setMessage('Registration confirmed successfully! You will be redirected to login...');
                 setTimeout(() => {
-                    onNavigate('login');
+                    navigate('/login');
                 }, 5000);
             } else {
                 setError(response?.message || 'Failed to confirm registration. Please try again.');
@@ -169,7 +171,7 @@ const ConfirmRegistrationPage: React.FC<ConfirmRegistrationProps> = ({ onNavigat
                         <div className="mt-6">
                             <a
                                 href="#"
-                                onClick={() => onNavigate("login")}
+                                onClick={() => navigate("/login")}
                                 className="w-full flex justify-center text-sm font-medium text-blue-600 hover:text-blue-500"
                             >
                                 Back to Login

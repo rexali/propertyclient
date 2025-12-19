@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Bell, Forward} from "lucide-react";
+import { Forward} from "lucide-react";
 import { updateNotificationAPI } from "../../api/admin/notifications/updateNotificationAPI";
 import { getNotificationAPI } from "../../api/admin/notifications/getNotificationAPI";
 
@@ -13,7 +13,7 @@ const initialForm: NotificationForm = {
     message: "",
 };
 
-const NotificationEdit = ({ setOpenEdit, notificationId }: { setOpenEdit: Function, notificationId:number }) => {
+const NotificationEdit = ({ setOpenEdit, notificationId, setReload}: { setOpenEdit: Function, notificationId:number, setReload:any }) => {
     const [form, setForm] = useState<NotificationForm>(initialForm);
     const [status, setStatus] = useState<string | null>(null);
 
@@ -30,14 +30,15 @@ const NotificationEdit = ({ setOpenEdit, notificationId }: { setOpenEdit: Functi
         if (result) {
             setStatus("Notification sent!");
             setForm(initialForm);
-            setOpenEdit(false)
+            setOpenEdit(false);
+            setReload((prev:any)=>prev+1);
         }
 
     };
 
     useEffect(()=>{
         (async ()=>{
-            let {notification} = await getNotificationAPI(notificationId);
+            let {notification} = await getNotificationAPI(notificationId);            
             setForm(notification)
         })()
     },[notificationId]);
@@ -48,8 +49,7 @@ const NotificationEdit = ({ setOpenEdit, notificationId }: { setOpenEdit: Functi
             className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow space-y-6"
         >
             <h2 className="text-2xl font-bold mb-4 text-gray-900 text-center flex items-center justify-between gap-2">
-                  Edit Notification 
-                 <Bell className="h-7 w-7 text-red-500" />
+                Edit Notification 
                <span onClick={() => setOpenEdit(false)}> <Forward /></span>
             </h2>
             <div>
@@ -82,7 +82,7 @@ const NotificationEdit = ({ setOpenEdit, notificationId }: { setOpenEdit: Functi
                     type="submit"
                     className="py-2 px-4 bg-blue-600 text-white font-semibold rounded shadow hover:bg-blue-700 transition"
                 >
-                    Send Notification
+                    Update Notification
                 </button>
             </div>
         </form>

@@ -5,6 +5,7 @@ import { BASE_URL_LOCAL } from "../../../../constants/constants";
 import Pagination from "../../../common/Pagination";
 import UserDetails from "./UserDetails";
 import { ResponseType } from "../../../../types";
+import { toast } from "sonner";
 
 
 export const UsersTab = () => {
@@ -12,11 +13,12 @@ export const UsersTab = () => {
   const [open, setOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
+  const itemsPerPage = 10
 
   useEffect(() => {
     (async () => {
       let result = await getRegisteredUsersAPI(currentPage);
-      setTotalPages(result.profileCount)
+      setTotalPages(Math.ceil(result.profileCount / itemsPerPage));
       setData(result?.profiles)
     })();
   }, [currentPage]);
@@ -32,7 +34,12 @@ export const UsersTab = () => {
   async function handleRemoveUser(UserId: any): Promise<void> {
     const confirm = window.confirm("Want to delete this account");
     if (confirm) {
-      await removeUserAPI(UserId);
+      let res = await removeUserAPI(UserId);
+      if (res) {
+        toast('Success: User Account Deleted')
+      } else {
+        toast('Fail: Fail to delete an account')
+      }
     }
   }
 
@@ -114,7 +121,7 @@ export const UsersTab = () => {
 
 
 async function removeUserAPI(UserId: any) {
-  let response = await fetch(BASE_URL_LOCAL + "api/v1/auth/remove/" + UserId, { method: "DELETE", credentials: 'include' });
+  let response = await fetch(BASE_URL_LOCAL + "/api/v1/auth/remove/" + UserId, { method: "DELETE", credentials: 'include' });
   let result = await response.json() as ResponseType;
   if (result.status === 'success') {
 

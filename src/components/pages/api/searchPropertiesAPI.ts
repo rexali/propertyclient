@@ -6,12 +6,9 @@ export type Query = {
     location: string;
     minPrice: number;
     maxPrice: number;
-    type: string;
-    roomType: string;
+    propertyType: string;
     bedrooms: number;
     bathrooms: number;
-    amenities: Array<string>;
-    availability: boolean;
 }
 
 export const searchPropertiesAPI = async function searchPropertiesAPI(query: any) {
@@ -28,7 +25,7 @@ export const searchPropertiesAPI = async function searchPropertiesAPI(query: any
         const result = await response.json() as ResponseType;
         if (result.status === 'success') {
 
-            return result.data?.rooms;
+            return result.data;
         }
 
     } catch (error) {

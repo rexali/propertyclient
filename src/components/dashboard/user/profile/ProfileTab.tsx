@@ -1,4 +1,4 @@
-import { Edit, Save, X, } from "lucide-react";
+import { Edit, Save, User, X, } from "lucide-react";
 import { useEffect, useState } from "react";
 import Form from "form-data";
 import { BASE_URL_LOCAL } from "../../../../constants/constants";
@@ -8,13 +8,15 @@ import { updateUserProfileAPI } from "../../api/admin/profile/updateUserProfile"
 
 const ProfileTab = () => {
 
-    const { user }= useAuth() as any;
+    const { user } = useAuth() as any;
     const [isEditing, setIsEditing] = useState(false);
     const [profile, setProfile] = useState<any>(user?.profile || {});
     const [status, setStatus] = useState('');
     const [image, setImage] = useState({
-        filename: "" as string,
-        file: {} as any
+        fileName: "" as string,
+        file: {} as any,
+        document: {} as any,
+        documentName: "" as string
     });
 
     const handleSaveProfile = async () => {
@@ -22,6 +24,9 @@ const ProfileTab = () => {
         const formData = new Form();
         if (image.file && image.file.name) {
             formData.append("image", image.file, image.file.name);
+        }
+        if (image.document && image.document.name) {
+            formData.append("document", image.document, image.document.name);
         }
         formData.append('name', profile.name);
         // formData.append('email', profile.email);
@@ -85,8 +90,16 @@ const ProfileTab = () => {
 
             <div className="flex items-center mb-6">
                 <div className="w-20 h-20 bg-gradient-to-r from-red-600 to-orange-600 rounded-full flex items-center justify-center mr-6">
-                    {/* <User className="h-10 w-10 text-white" /> */}
-                    <img crossOrigin="" src={BASE_URL_LOCAL+"/uploads/"+profile?.image} alt={profile?.name} width={10} height={10} style={{ margin: 2, height: "auto", width: "auto", display: "inline-block" }} />
+
+                    {profile?.image ? (<img
+                        crossOrigin=""
+                        src={BASE_URL_LOCAL + "/uploads/" + profile?.image}
+                        alt={profile?.name}
+                        width={10}
+                        height={10}
+                        style={{ margin: 2, height: "auto", width: "auto", display: "inline-block" }}
+                        className="w-16 h-16 rounded-full object-cover mr-4"
+                    />) : <User className="h-20 w-20 text-white" />}
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-gray-900">{profile?.name}</h3>
@@ -100,14 +113,14 @@ const ProfileTab = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Upload a photo
+                            {user.role === 'user' ? <span>Upload a photo</span> : <span>Upload a logo</span>}
                         </label>
 
                         {isEditing ? (
 
                             <input
                                 type="file"
-                                onChange={(e: any) => setImage(prev => ({ ...prev, filename: e.target.files[0].name, file: e.target.files[0] }))}
+                                onChange={(e: any) => setImage(prev => ({ ...prev, fileName: e.target.files[0].name, file: e.target.files[0] }))}
                                 formEncType='multipart/form-data'
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -115,6 +128,24 @@ const ProfileTab = () => {
                             <p className="py-2 text-gray-900">{profile?.image || 'Not provided'}</p>
                         )}
                     </div>
+
+                    {user.role === 'provider' && (<div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <span>Upload a C.A.C. Document</span>
+                        </label>
+
+                        {isEditing ? (
+
+                            <input
+                                type="file"
+                                onChange={(e: any) => setImage(prev => ({ ...prev, documentName: e.target.files[0].name, document: e.target.files[0] }))}
+                                formEncType='multipart/form-data'
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        ) : (
+                            <p className="py-2 text-gray-900">{profile?.document || 'Not provided'}</p>
+                        )}
+                    </div>)}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Bell, Forward } from "lucide-react";
 import { addNotificationAPI } from "../../api/admin/notifications/addNotificationAPI";
+import { toast } from "sonner";
 
 interface NotificationForm {
     title: string;
@@ -12,7 +13,7 @@ const initialForm: NotificationForm = {
     message: "",
 };
 
-const NotificationAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
+const NotificationAdd = ({ setOpenAdd, setReload }: { setOpenAdd: Function, setReload: any }) => {
     const [form, setForm] = useState<NotificationForm>(initialForm);
     const [status, setStatus] = useState<string | null>(null);
 
@@ -28,8 +29,10 @@ const NotificationAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
         let result = await addNotificationAPI(form);
         if (result) {
             setStatus("Notification sent!");
+            toast('Success: Notification sent')
             setForm(initialForm);
-            setOpenAdd(false)
+            setOpenAdd(false);
+            setReload((prev: any) => prev + 1)
         }
 
     };
@@ -40,8 +43,7 @@ const NotificationAdd = ({ setOpenAdd }: { setOpenAdd: Function }) => {
             className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow space-y-6"
         >
             <h2 className="text-2xl font-bold mb-4 text-gray-900 text-center flex items-center justify-between gap-2">
-                Add Notification
-                <Bell className="h-7 w-7 text-red-500" />
+                New Notification
                 <span onClick={() => setOpenAdd(false)}> <Forward /></span>
             </h2>
             <div>

@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { Menu, X, Home, Search, Phone, Info, Settings, User } from 'lucide-react';
+import React, { useState, } from 'react';
+import { Menu, X, Home, Search, Phone, Info, Settings, User, ShoppingCartIcon, Heart } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   currentPage: string;
   onNavigate: (page: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
+const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isAuthenticated, user, admin, logout } = useAuth();
-  // const onNavigate = useNavigate()
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navigation = [
     { name: 'Home', href: 'home', icon: Home },
@@ -18,11 +20,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
     { name: 'Services', href: 'services', icon: Settings },
     { name: 'About', href: 'about', icon: Info },
     { name: 'Contact', href: 'contact', icon: Phone },
+    { name: 'Wishlist', href: 'wishlist', icon: Heart },
+    { name: 'Cart', href: 'cart', icon: ShoppingCartIcon },
   ];
 
   const handleLogout = () => {
     logout();
-    onNavigate('home');
+    navigate('/home');
     setIsMenuOpen(false);
   };
 
@@ -31,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <div className="flex-shrink-0 cursor-pointer" onClick={() => onNavigate('home')}>
+          <div className="flex-shrink-0 cursor-pointer" onClick={() => navigate('/home')}>
             <div className="flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg flex items-center justify-center">
                 <Home className="h-5 w-5 text-white" />
@@ -42,22 +46,21 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => onNavigate(item.href)}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                    currentPage === item.href
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="h-4 w-4 mr-1" />
-                  {item.name}
-                </button>
-              );
+            {navigation?.map((item: any) => {
+              const Icon = item?.icon;
+              return <Link
+                key={item.name}
+                to={'/' + item.href}
+                // onClick={() => navigate('/' + item.href)}
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${location.pathname === '/'+item.href
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'}`}
+              >
+                <Icon className="h-4 w-4 mr-1" />
+                {item.name}
+              </Link>
+
+              // );
             })}
           </nav>
 
@@ -66,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => onNavigate(admin ? 'admin-dashboard' : 'user-dashboard')}
+                  onClick={() => navigate(admin ? '/admin-dashboard' : '/user-dashboard')}
                   className="flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
                 >
                   <User className="h-4 w-4 mr-1" />
@@ -82,13 +85,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             ) : (
               <div className="flex items-center space-x-4">
                 <button
-                  onClick={() => onNavigate('login')}
+                  onClick={() => navigate('/login')}
                   className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200"
                 >
                   Login
                 </button>
                 <button
-                  onClick={() => onNavigate('admin-login')}
+                  onClick={() => navigate('/admin-login')}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors duration-200"
                 >
                   Admin
@@ -119,14 +122,13 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 <button
                   key={item.name}
                   onClick={() => {
-                    onNavigate(item.href);
+                    navigate('/'+item.href);
                     setIsMenuOpen(false);
                   }}
-                  className={`flex items-center w-full px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    currentPage === item.href
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center w-full px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${location.pathname === '/'+item.href
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}
                 >
                   <Icon className="h-5 w-5 mr-2" />
                   {item.name}
@@ -140,7 +142,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 <>
                   <button
                     onClick={() => {
-                      onNavigate(admin ? 'admin-dashboard' : 'user-dashboard');
+                      navigate(admin ? '/admin-dashboard' : '/user-dashboard');
                       setIsMenuOpen(false);
                     }}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-gray-50 transition-colors duration-200"
@@ -159,7 +161,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 <>
                   <button
                     onClick={() => {
-                      onNavigate('login');
+                      navigate('/login');
                       setIsMenuOpen(false);
                     }}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-700 hover:bg-gray-50 transition-colors duration-200"
@@ -168,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                   </button>
                   <button
                     onClick={() => {
-                      onNavigate('admin-login');
+                      navigate('/admin-login');
                       setIsMenuOpen(false);
                     }}
                     className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"

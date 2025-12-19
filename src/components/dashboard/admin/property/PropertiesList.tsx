@@ -3,18 +3,17 @@ import { Delete, Eye, Pencil } from 'lucide-react';
 import PropertyEdit from './PropertyEdit';
 import { toast } from 'sonner';
 import { removePropertyAPI } from '../../api/admin/property/removePropertyAPI';
-// import { Property } from '../../../../types';
 import { useProperty } from '../../../../context/PropertyContext';
 import { getPropertiesAPI } from '../../api/admin/property/getPropertiesAPI';
 
 type PropertyTabProps = {
-    // initialProperty: Property[];
-    onNavigate: (page: string, data?: any) => void
+    onNavigate: (page: string, data?: any) => void,
+    setReload:any
 };
 
-export function PropertiesList({ onNavigate }: PropertyTabProps) {
+export function PropertiesList({ onNavigate,setReload }: PropertyTabProps) {
 
-    let { properties, setProperties} = useProperty()
+    let { properties, setProperties } = useProperty()
     const [edit, setEdit] = useState(false);
     const [propertyId, setPropertyId] = useState<any>();
 
@@ -29,7 +28,8 @@ export function PropertiesList({ onNavigate }: PropertyTabProps) {
             let result = await removePropertyAPI(id as number);
             if (result) {
                 let data = await getPropertiesAPI()
-                setProperties(data.properties);
+                setProperties(data?.properties);
+                setReload((prev:any)=>prev+1);
                 toast("Property removed successfully");
             } else {
                 toast("Property removal failed");
@@ -38,7 +38,7 @@ export function PropertiesList({ onNavigate }: PropertyTabProps) {
     }
 
     if (edit) {
-        return <PropertyEdit propertyId={propertyId} setOpen={setEdit} />
+        return <PropertyEdit propertyId={propertyId} setOpen={setEdit} setReload={setReload} />
     }
 
     return (
@@ -54,7 +54,7 @@ export function PropertiesList({ onNavigate }: PropertyTabProps) {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>{properties?.length === 0 && "No properties found"}</tr>
+
                     {
                         properties?.map((property: any, i: any) => (
                             <tr key={i}>
@@ -64,7 +64,7 @@ export function PropertiesList({ onNavigate }: PropertyTabProps) {
                                 <td className="border px-4 py-2">{property?.status}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div className="flex space-x-2">
-                                        <button onClick={() => onNavigate('property-details', property?.id)} className="text-blue-600 hover:text-blue-900">
+                                        <button onClick={() => onNavigate('/properties/' + property?.id, { state: property?.id })} className="text-blue-600 hover:text-blue-900">
                                             <Eye className="h-4 w-4" />
                                         </button>
                                         <button className="text-red-600 hover:text-red-900">
@@ -79,7 +79,8 @@ export function PropertiesList({ onNavigate }: PropertyTabProps) {
                         ))
                     }
                 </tbody>
-            </table>
+            </table><br />
+            <div className="text-center" >{properties?.length === 0 && <span>No properties found</span> }</div>
         </div>
     );
 }

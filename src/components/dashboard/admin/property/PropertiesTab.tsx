@@ -5,13 +5,19 @@ import Pagination from '../../../common/Pagination';
 import PropertyAdd from './PropertyAdd';
 import { PropertiesList } from './PropertiesList';
 import { useProperty } from '../../../../context/PropertyContext';
+import { useAuth } from '../../../../context/AuthContext';
+import { getUserPropertiesAPI } from '../../api/admin/property/getUserPropertiesAPI';
 
 export function PropertiesTab({ onNavigate }: { onNavigate: any }) {
     const [open, setOpen] = useState<Boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const [totalPages, setTotalPages] = useState<number>(0);
+    const [totalPages, setTotalPages] = useState<number>(1);
     const [refreshPage, setRefreshPage] = useState(0);
-    let { setProperties } = useProperty()
+    let { setProperties } = useProperty();
+    const { user, admin } = useAuth();
+    const itemsPerPage = 10;
+
+
     const handleSetKey = () => {
         setRefreshPage(prev => prev + 1);
     }
@@ -23,26 +29,27 @@ export function PropertiesTab({ onNavigate }: { onNavigate: any }) {
 
     useEffect(() => {
         (async () => {
-            let data = await getPropertiesAPI(currentPage);
-            setTotalPages(data?.propertyCount ?? 2);
-            setProperties(data?.properties);
+            if (admin?.role === 'admin') {
+                let data = await getPropertiesAPI(currentPage);
+                setTotalPages(Math.ceil((data?.propertyCount ?? 1) / itemsPerPage));
+                setProperties(data?.properties);
+            } else if (user?.role === 'provider') {
+                let data = await getUserPropertiesAPI(user?.userId, currentPage);
+                setTotalPages(Math.ceil((data?.propertyCount ?? 1 )/ itemsPerPage));
+                setProperties(data?.properties);
+            }
         })();
     }, [currentPage, refreshPage])
 
 
     if (open) {
-        return (
-            <div>
-                <h3>New Property</h3>
-                <PropertyAdd setOpen={handleSetOpen} />
-            </div>
-        )
+        return <PropertyAdd setOpen={handleSetOpen} />
     }
 
     return (
         <div>
-            <h2 className='flex justify-between'>Properties<span onClick={() => setOpen(true)}><PlusCircle /></span></h2>
-            <PropertiesList onNavigate={onNavigate} />
+            <h2 className='flex justify-between'>Properties <span onClick={() => setOpen(true)}><PlusCircle /></span></h2>
+            <PropertiesList onNavigate={onNavigate} setReload={setRefreshPage} />
             <div>
                 <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} /><br />
             </div>

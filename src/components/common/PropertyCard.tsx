@@ -1,5 +1,5 @@
-import React from 'react';
-import { Heart, Share2, MapPin, Bed, Bath, Square, Phone, Star } from 'lucide-react';
+import React, { ChangeEvent, useState } from 'react';
+import { Heart, Share2, MapPin, Bed, Bath, Square, Phone, Star, CreditCard, ShoppingCartIcon, Plus } from 'lucide-react';
 import { Property } from '../../types';
 import { useProperty } from '../../context/PropertyContext';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +7,12 @@ import { BASE_URL_LOCAL } from '../../constants/constants';
 import { savePropertyAPI } from '../pages/api/savePropertyAPI';
 import { toast } from 'sonner';
 import { removeSavedPropertyAPI } from '../pages/api/removeSavedProperty';
+import { handlePriceFormat } from '../../utils/handlePriceFormat';
+import { handleSimpleShare } from '../../utils/handleSimpleShare';
+import { makePaymentWithPopupAPI } from '../pages/payment/makePaymentWithPopupAPI';
+import { Link, useNavigate } from 'react-router-dom';
+import { fetchDataAPI } from '../../api/fetchDataAPI';
+import { isExistingAPI } from '../pages/api/isExistingAPI';
 
 interface PropertyCardProps {
   property: Property;
@@ -16,58 +22,95 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, showStatus = false }) => {
   const { favorites, addFavorite, removeFavorite } = useProperty();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, admin } = useAuth();
   const isFavorite = favorites.includes(String(property?.id));
-
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
+  const [checkInCheckOutForm, setCheckInCheckOutForm] = useState(false);
+  const [checkInCheckOutData, setCheckInCheckOutData] = useState({
+    checkIn: '',
+    checkOut: '',
+    propertyId: '',
+    propertyPrice: 0,
+    userId: user?.userId
+  });
+  const navigate = useNavigate();
 
   const handleFavoriteClick = async (propertyId: number, userId: number) => {
     if (!isAuthenticated) {
       toast("Please login to save favorite properties");
       return;
-    }
+    }    
+    let {success} = await isExistingAPI(userId, propertyId, 'favourites'); 
 
-    if (isFavorite) {
+    if (success) {
       if (await removeSavedPropertyAPI({ propertyId, userId })) {
         toast("Property removed!");
         removeFavorite(String(property.id));
       }
     } else {
-      if (await savePropertyAPI({ propertyId, userId })) {
+      if (await savePropertyAPI({ PropertyId: propertyId, UserId: userId })) {
         toast("Property added!");
         addFavorite(String(property.id));
       }
     }
   };
 
-  const handleShareClick = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: property.title,
-        text: `Check out this amazing property: ${property.title}`,
-        url: window.location.href + "/" + property.id,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Property link copied to clipboard!');
+
+
+  async function handleContineCheckOut(propertyId: string, propertyPrice: number): Promise<void> {
+    console.log(JSON.parse(window.localStorage.getItem('checkoutData') || '{}'));
+
+    if (!isAuthenticated) {
+      toast("Please login first to book a room");
+      return;
     }
-  };
+
+    await makePaymentWithPopupAPI({
+      propertyId: propertyId,
+      amount: propertyPrice,
+      userId: user?.userId || admin?.userId,
+      email: user?.email
+    });
+
+  }
+
+  async function handleSend(): Promise<void> {
+    window.localStorage.setItem('checkoutData', JSON.stringify(checkInCheckOutData));
+    setCheckInCheckOutForm(false);
+    await handleContineCheckOut(checkInCheckOutData.propertyId, checkInCheckOutData.propertyPrice);
+    setTimeout(() => {
+      setCheckInCheckOutData(prev => ({
+        ...prev,
+        propertyPrice: 0,
+        checkIn: '',
+        checkOut: '',
+        propertyId: '',
+      }))
+    }, 3000);
+
+  }
+
+
+  function handleChangeCheckInCheckOut(event: ChangeEvent<HTMLInputElement>, propertyId: string, propertyPrice: number): void {
+    const { name, value } = event.target;
+    setCheckInCheckOutData(prev => ({
+      ...prev,
+      propertyId,
+      propertyPrice,
+      [name]: value
+    }))
+
+  }
+
 
   const getStatusBadge = () => {
-    if (!showStatus || property.status === 'for_sale') return null;
+    if (showStatus) return null;  // property.status==='occupied'
 
     const statusConfig = {
-      sold: { text: 'SOLD', bg: 'bg-red-500' },
+      sold: { text: 'SOLD', bg: 'bg-yellow-500' },
       for_sale: { text: 'FOR SALE', bg: 'bg-red-500' },
-      occupied: { text: 'OCCUPIED', bg: 'bg-yellow-500' },
+      occupied: { text: 'OCCUPIED', bg: 'bg-brown-500' },
       for_rent: { text: 'FOR RENT', bg: 'bg-green-500' },
+      for_vacation: { text: 'FOR VACATION', bg: 'bg-violet-500' },
     };
 
     const config = statusConfig[property.status];
@@ -80,16 +123,46 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
     );
   };
 
+  async function addPropertyToCartAPI(id: number, userId: string | undefined) {
+    if (!isAuthenticated) {
+      toast('Please login first!');
+      return;
+    }
+    let { success } = await isExistingAPI(userId, id, 'carts');
+
+    if (!success) {
+      let result = await fetchDataAPI(
+        BASE_URL_LOCAL + '/api/v1/carts',
+        {
+          method: "POST",
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ PropertyId: id, UserId: userId })
+        });
+
+      if (result.cart) {
+        toast('Success! Property added');
+        return;
+      }
+      toast('Fail! No Property added');
+    } else {
+      toast('Property already added');
+    }
+
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
-        <img
-          src={property.images[0] ? BASE_URL_LOCAL + "/uploads/" + property.images[0] : property.images[0]}
-          alt={property.title}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-          crossOrigin=''
-        />
+        <Link to={'/properties/' + property?.id}>
+          <img
+            src={property.images[0] ? BASE_URL_LOCAL + "/uploads/" + property.images[0] : property.images[0]}
+            alt={property.title}
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            crossOrigin=''
+          />
+        </Link>
 
         {getStatusBadge()}
 
@@ -111,7 +184,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
             <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
           </button>
           <button
-            onClick={handleShareClick}
+            onClick={() => handleSimpleShare(property)}
             className="p-2 bg-white/90 rounded-full text-gray-700 hover:bg-blue-500 hover:text-white transition-all duration-200"
           >
             <Share2 className="h-4 w-4" />
@@ -123,7 +196,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-xl font-bold text-gray-900 line-clamp-1">{property.title}</h3>
-          <span className="text-2xl font-bold text-blue-600">{formatPrice(property.price)}</span>
+          <span className="text-2xl font-bold text-blue-600">{handlePriceFormat(property.price)}</span>
         </div>
 
         <div className="flex items-center text-gray-600 mb-3">
@@ -153,19 +226,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
           <div className="flex items-center">
             <img
-              src={BASE_URL_LOCAL + "/uploads/" + JSON.parse(property.agent as any).avatar}
-              alt={JSON.parse(property.agent as any).name}
+              src={BASE_URL_LOCAL + "/uploads/" + property.agent.avatar}
+              alt={property.agent.name}
               className="w-8 h-8 rounded-full mr-2"
               crossOrigin=''
             />
             <div>
-              <p className="text-sm font-medium text-gray-900">{JSON.parse(property.agent as any).name}</p>
+              <p className="text-sm font-medium text-gray-900">{property.agent.name?.split(' ')[0]}</p>
               <div className="flex items-center">
                 <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
-                <span className="text-xs text-gray-600">{JSON.parse(property.agent as any).experience} years exp</span>
+                <span className="text-xs text-gray-600">{property.agent.experience} yrs exp</span>
               </div>
             </div>
           </div>
+
           <div className="flex space-x-2">
             <button
               onClick={() => {
@@ -173,21 +247,94 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
                   toast("Please login first to call the agent");
                   return;
                 }
-                toast(`Calling ${JSON.parse(property.agent as any).phone}`)
+                toast(`Calling ${(property.agent as any).phone}`)
               }}
               className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
               title="Contact Agent"
             >
               <Phone className="h-4 w-4" />
             </button>
-            <button
+            {/* <button
               onClick={() => onViewDetails(property?.id)}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
-            >
-              View Details
-            </button>
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+              >
+              <Eye className="h-4 w-4"/>
+            </button> */}
+
+            {property.status === 'for_vacation' && (
+              <button
+                onClick={async () => {
+                  await addPropertyToCartAPI(property.id, user?.userId);
+                }}
+                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              >
+                <span className="text-sm"><Plus className="h-4 w-4" /></span>
+                <ShoppingCartIcon className="h-4 w-4" />
+              </button>
+            )}
+
+            {property.status === 'for_vacation' && (
+              <button
+                onClick={() => {
+                  // setCheckInCheckOutForm(true);
+                  navigate('/checkout/' + property.id);
+                }}
+                className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span className="text-sm">Book</span>
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Check in and out Modal */}
+        {checkInCheckOutForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <h3 className="text-xl font-bold mb-4">Enter check in/out date?</h3>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Check in</label>
+                <input
+                  type="date"
+                  name="checkIn"
+                  onChange={(e) => handleChangeCheckInCheckOut(e, property.id as any, property.price)}
+                  value={checkInCheckOutData.checkIn}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Check out</label>
+                <input
+                  type="date"
+                  name="checkOut"
+                  onChange={(e) => handleChangeCheckInCheckOut(e, property.id as any, property.price)}
+                  value={checkInCheckOutData.checkOut}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setCheckInCheckOutForm(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSend}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  Continue to Checkout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
