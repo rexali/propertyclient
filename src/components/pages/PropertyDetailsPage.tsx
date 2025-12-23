@@ -25,6 +25,7 @@ import ReviewAdd from './components/ReviewAdd';
 import { makePaymentWithPopupAPI } from './payment/makePaymentWithPopupAPI';
 import { fetchDataAPI } from '../../api/fetchDataAPI';
 import { isExistingAPI } from './api/isExistingAPI';
+import { getPropertyById } from '../../mocks';
 
 const PropertyDetailsPage: React.FC = () => {
   const { isAuthenticated, user, admin } = useAuth();
@@ -267,9 +268,17 @@ const PropertyDetailsPage: React.FC = () => {
 
   React.useEffect(() => {
     (async () => {
-      let data = await getPropertyAPI(propertyId);
+      let data;
+      try {
+        data = await getPropertyAPI(propertyId);
+      } catch (error) {
+        console.log(error);
+      }
+      
+      let mockProperty = getPropertyById(propertyId as number);      
+      let _property = Object.keys(data ?? {}).length ? data : mockProperty;
       setProperty({
-        ...data
+        ..._property
       })
 
     })();
@@ -335,7 +344,7 @@ const PropertyDetailsPage: React.FC = () => {
             {/* Action Buttons */}
             <div className="absolute bottom-4 right-4 flex space-x-2">
               <button
-                onClick={() => handleFavoriteClick(property?.id, user?.userId as unknown as number)}
+                onClick={() => handleFavoriteClick(property?.id as number, user?.userId as unknown as number)}
                 className={`p-3 rounded-full transition-all duration-200 ${isFavorite
                   ? 'bg-red-500 text-white'
                   : 'bg-white/90 text-gray-700 hover:bg-red-500 hover:text-white'
@@ -568,7 +577,7 @@ const PropertyDetailsPage: React.FC = () => {
                       {property.status === 'for_vacation' && (
                         <button
                           onClick={async () => {
-                            await addPropertyToCartAPI(property.id, user?.userId);
+                            await addPropertyToCartAPI(property.id as number, user?.userId);
                           }}
                           className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
 

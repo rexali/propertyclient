@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import { SimplePagination } from '../common/SimplePagination';
 import { searchPropertiesAPI } from './api/searchPropertiesAPI';
+import { getProperties } from '../../mocks';
 
 const PropertiesPage: React.FC = () => {
   const {
@@ -16,11 +17,12 @@ const PropertiesPage: React.FC = () => {
     setFilters,
     filterProperties,
   } = useProperty();
-  const [propertys, setPropertys] = useState<any>([]);
+  const [propertys, setPropertys] = useState<Array<any>>();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalProperties, setTotalProperties] = useState(4);
+  const [totalProperties, setTotalProperties] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const sponsoredListing = propertys?.filter((property: any) => property.isFeatured === true || property.isSponsored === true) || [];
 
@@ -37,14 +39,24 @@ const PropertiesPage: React.FC = () => {
   // };
 
   const itemsPerPage = 4;
-  const totalPages = Math.ceil(totalProperties / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
 
-
   const getFilteredData = useCallback(async (filters: any, currentPage: number = 1) => {
-    let result = await searchPropertiesAPI({ ...filters, page: currentPage })
-    setPropertys(result?.properties || []);
-    setTotalProperties(result?.propertyCount || 0)
+    let result;
+    try {
+      result = await searchPropertiesAPI({ ...filters, page: currentPage });
+    } catch (error) {
+      console.log(error);
+    }
+    // mock
+    let propertiex = getProperties();
+    // check
+    let properties = result?.properties?.length ? result.properties : propertiex
+    setTotalProperties(result?.propertyCount ?? 1);
+    setTotalPages(Math.ceil(totalProperties / itemsPerPage));
+    setPropertys(properties);
+
+
   }, [currentPage])
 
   React.useEffect(() => {

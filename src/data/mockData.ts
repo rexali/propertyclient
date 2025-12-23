@@ -2,7 +2,6 @@ import { Property, Agent, User, Admin, Message, Notification } from '../types';
 
 export const mockAgents: Agent[] = [
   {
-    id: '1',
     name: 'Sarah Johnson',
     email: 'sarah@example.com',
     phone: '+1 (555) 123-4567',
@@ -10,7 +9,6 @@ export const mockAgents: Agent[] = [
     experience: 8,
   },
   {
-    id: '2',
     name: 'Michael Chen',
     email: 'michael@example.com',
     phone: '+1 (555) 234-5678',
@@ -18,7 +16,6 @@ export const mockAgents: Agent[] = [
     experience: 12,
   },
   {
-    id: '3',
     name: 'Emily Rodriguez',
     email: 'emily@example.com',
     phone: '+1 (555) 345-6789',
@@ -37,7 +34,7 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1200,
     type: 'apartment',
-    status: 'for-sale',
+    status: 'for_sale',
     images: [
       'https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
       'https://images.pexels.com/photos/271816/pexels-photo-271816.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
@@ -51,6 +48,10 @@ export const mockProperties: Property[] = [
     createdAt: '2024-12-15T10:00:00Z',
     updatedAt: '2024-12-15T10:00:00Z',
     coordinates: { lat: 47.6062, lng: -122.3321 },
+    address: '',
+    localGovt: '',
+    state: '',
+    country: ''
   },
   {
     id: '2',
@@ -61,7 +62,7 @@ export const mockProperties: Property[] = [
     bathrooms: 3,
     area: 2800,
     type: 'villa',
-    status: 'for-sale',
+    status: 'for_sale',
     images: [
       'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
       'https://images.pexels.com/photos/1642125/pexels-photo-1642125.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
@@ -75,6 +76,10 @@ export const mockProperties: Property[] = [
     createdAt: '2024-12-14T15:30:00Z',
     updatedAt: '2024-12-14T15:30:00Z',
     coordinates: { lat: 34.0736, lng: -118.4004 },
+    address: '',
+    localGovt: '',
+    state: '',
+    country: ''
   },
   {
     id: '3',
@@ -85,7 +90,7 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 1800,
     type: 'house',
-    status: 'for-sale',
+    status: 'for_sale',
     images: [
       'https://images.pexels.com/photos/1029599/pexels-photo-1029599.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
       'https://images.pexels.com/photos/2089698/pexels-photo-2089698.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
@@ -99,6 +104,10 @@ export const mockProperties: Property[] = [
     createdAt: '2024-12-13T09:15:00Z',
     updatedAt: '2024-12-13T09:15:00Z',
     coordinates: { lat: 30.2672, lng: -97.7431 },
+    address: '',
+    localGovt: '',
+    state: '',
+    country: ''
   },
   {
     id: '4',
@@ -122,6 +131,10 @@ export const mockProperties: Property[] = [
     createdAt: '2024-12-12T14:20:00Z',
     updatedAt: '2024-12-15T16:45:00Z',
     coordinates: { lat: 40.7589, lng: -73.9851 },
+    address: '',
+    localGovt: '',
+    state: '',
+    country: ''
   },
   {
     id: '5',
@@ -132,7 +145,7 @@ export const mockProperties: Property[] = [
     bathrooms: 2,
     area: 2200,
     type: 'townhouse',
-    status: 'for-sale',
+    status: 'for_sale',
     images: [
       'https://images.pexels.com/photos/1080696/pexels-photo-1080696.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
       'https://images.pexels.com/photos/2089699/pexels-photo-2089699.jpeg?auto=compress&cs=tinysrgb&w=800&h=600',
@@ -145,12 +158,16 @@ export const mockProperties: Property[] = [
     createdAt: '2024-12-11T11:00:00Z',
     updatedAt: '2024-12-11T11:00:00Z',
     coordinates: { lat: 37.8044, lng: -122.4324 },
+    address: '',
+    localGovt: '',
+    state: '',
+    country: ''
   },
 ];
 
 export const mockUsers: User[] = [
   {
-    id: '1',
+    userId: '1',
     fullName: 'John Doe',
     email: 'john.doe@example.com',
     phone: '+1 (555) 987-6543',
@@ -160,20 +177,22 @@ export const mockUsers: User[] = [
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
     favorites: ['1', '2', '5'],
     createdAt: '2024-12-01T10:00:00Z',
+    role: 'user'
   },
   {
-    id: '2',
+    userId: '2',
     fullName: 'Jane Smith',
     email: 'jane.smith@example.com',
     phone: '+1 (555) 876-5432',
     favorites: ['3', '4'],
     createdAt: '2024-12-02T14:30:00Z',
+    role: 'user'
   },
 ];
 
 export const mockAdmins: Admin[] = [
   {
-    id: '1',
+    userId: '1',
     fullName: 'Admin User',
     email: 'admin@propertymanager.com',
     phone: '+1 (555) 111-2222',

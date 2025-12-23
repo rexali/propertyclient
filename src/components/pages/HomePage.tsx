@@ -5,21 +5,30 @@ import SearchFilters from '../search/SearchFilters';
 import { useProperty } from '../../context/PropertyContext';
 import { getPropertiesAPI } from '../dashboard/api/admin/property/getPropertiesAPI';
 import { useNavigate } from 'react-router-dom';
+import { getProperties } from '../../mocks';
 
 const HomePage: React.FC = () => {
   const { properties, setProperties, filters, setFilters } = useProperty();
   const navigate = useNavigate();
-  const featuredProperties = properties?.filter(p => p.isFeatured).slice(0, 3);
-  const popularProperties = properties?.filter(p => p.status).slice(0, 3);
+
+  const featuredProperties = properties?.filter(p => p.isFeatured).slice(0, 3).length ?
+    properties?.filter(p => p.isFeatured).slice(0, 3) : getProperties();
+
+  const popularProperties = properties?.filter(p => p.status).slice(0, 3).length ?
+    properties?.filter(p => p.status).slice(0, 3) : getProperties();
+
   const newProperties = properties?.filter(p => p.status)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 3);
-  const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 3);
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).length ?
+    properties?.filter(p => p.status)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3) : getProperties();
+
+  const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 3).length ? 
+  properties?.filter(p => p.status === 'sold').slice(0, 3) : getProperties();
 
   const handleViewProperty = (value: any) => {
     navigate('/properties/' + value, { state: value });
   };
-  
+
   const categories = [
     { name: 'Apartments', count: properties?.filter(p => p.type === 'apartment').length, icon: '🏢' },
     { name: 'Houses', count: properties?.filter(p => p.type === 'house').length, icon: '🏠' },
@@ -100,7 +109,7 @@ const HomePage: React.FC = () => {
       setProperties(data?.properties);
     })();
   }, []);
-  
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}

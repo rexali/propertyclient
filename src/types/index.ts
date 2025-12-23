@@ -6,7 +6,7 @@ export interface ResponseType {
 }
 
 export interface Property {
-  id: number;
+  id?: number;
   title: string;
   price: number;
   location: string;

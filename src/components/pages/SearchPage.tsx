@@ -22,7 +22,7 @@ const PropertiesPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalProperties, setTotalProperties] = useState(4);
+  const [totalProperties, setTotalProperties] = useState(1);
   const [searchParams, _] = useSearchParams();
   const propertyType = searchParams.get('state') || searchParams.get('location') || '';
   const navigate = useNavigate();
@@ -49,7 +49,7 @@ const PropertiesPage: React.FC = () => {
   const getFilteredData = useCallback(async (filters: any, currentPage: number) => {
     let result = await searchPropertiesAPI({ ...filters, page: currentPage })
     setPropertys(result?.properties || []);
-    setTotalProperties(result?.propertyCount || 0)
+    setTotalProperties(result?.propertyCount || 1)
   }, [currentPage])
 
   React.useEffect(() => {
