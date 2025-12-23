@@ -23,16 +23,24 @@ const WishlistPage: React.FC = () => {
     const [totalPages, setTotalPages] = useState<number>(1);
     const { user, isAuthenticated } = useAuth();
     const [refreshPage, setRefreshPage] = useState<number>(1);
+    const [loadingPage, setLoadingPage] = useState<Boolean>(false);
+
     const itemsPerPage = 10;
 
     useEffect(() => {
         (async () => {
-            // fallback mock
             if (isAuthenticated) {
-                let data = await getUserSavedPropertiesAPI(user?.userId as unknown as number, currentPage);
-                let items = data?.favourites.map((fav: any) => ({ favouriteId: fav.id, ...fav.Property }));
-                setTotalPages(Math.ceil(Number(data?.favouriteCount) / itemsPerPage))
-                setItems(items)
+                try {
+                    setLoadingPage(true);
+                    let data = await getUserSavedPropertiesAPI(user?.userId as unknown as number, currentPage);
+                    let items = data?.favourites.map((fav: any) => ({ favouriteId: fav.id, ...fav.Property }));
+                    setTotalPages(Math.ceil(Number(data?.favouriteCount) / itemsPerPage))
+                    setItems(items)
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    setLoadingPage(false)
+                }
             }
         })();
 
@@ -50,9 +58,8 @@ const WishlistPage: React.FC = () => {
         if (res) {
             setRefreshPage(prev => prev + 1);
             toast("Property removed!");
-            // setMessage('Removed from wishlist');
-            // setTimeout(() => setMessage(null), 2000);
-
+            setMessage('Removed from wishlist');
+            setTimeout(() => setMessage(null), 3000);
         }
     }
 
@@ -91,6 +98,14 @@ const WishlistPage: React.FC = () => {
     }
 
 
+    if (loadingPage) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-2xl font-bold mb-4">Your Wishlist</h1>
@@ -128,7 +143,7 @@ const WishlistPage: React.FC = () => {
                             </div>
 
                             <div className="mt-4 flex space-x-2">
-                                <button onClick={async () => await addPropertyToCartAPI(item.id, user?.userId, item?.favouriteId)} className="flex-1 px-3 py-2 bg-blue-600 text-white rounded">Add to cart</button>
+                                <button onClick={async () => await addPropertyToCartAPI(item.id as number, user?.userId, item?.favouriteId)} className="flex-1 px-3 py-2 bg-blue-600 text-white rounded">Add to cart</button>
                                 <button onClick={async () => await removeFromWishlist(item?.favouriteId as number)} className="px-3 py-2 border rounded">Remove</button>
                             </div>
 

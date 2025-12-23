@@ -17,8 +17,6 @@ export default function Webhook() {
                 // TO DO 1: use reference to query paystack
                 let result = await verifyPaymentAPI(reference);
                 setResult(result);
-                console.log(result);
-
                 let checkoutData = JSON.parse(window.localStorage.getItem('checkoutData') || '') as {
                     checkIn: string;
                     checkOut: string;

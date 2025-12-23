@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { SimplePagination } from '../common/SimplePagination';
 import { searchPropertiesAPI } from './api/searchPropertiesAPI';
+import { toast } from 'sonner';
 
 const PropertiesPage: React.FC = () => {
   const {
@@ -26,6 +27,7 @@ const PropertiesPage: React.FC = () => {
   const [searchParams, _] = useSearchParams();
   const propertyType = searchParams.get('state') || searchParams.get('location') || '';
   const navigate = useNavigate();
+  const [loadingPage, setLoadingPage] = useState<Boolean>(false);
   const sponsoredListing = propertys.filter((property: any) => property.isFeatured === true || property.isSponsored === true);
 
   // const [searchParams, _] = useSearchParams();
@@ -47,7 +49,16 @@ const PropertiesPage: React.FC = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
 
   const getFilteredData = useCallback(async (filters: any, currentPage: number) => {
-    let result = await searchPropertiesAPI({ ...filters, page: currentPage })
+    let result;
+    try {
+      setLoadingPage(true)
+      result = await searchPropertiesAPI({ ...filters, page: currentPage });
+    } catch (error) {
+      console.error(error);
+      toast('Error! Failed to load properties')
+    } finally {
+      setLoadingPage(false)
+    }
     setPropertys(result?.properties || []);
     setTotalProperties(result?.propertyCount || 1)
   }, [currentPage])
@@ -60,6 +71,16 @@ const PropertiesPage: React.FC = () => {
   const handleViewProperty = (value: any) => {
     navigate('/properties/' + value, { state: value });
   };
+
+
+
+  if (loadingPage) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
 
   return (

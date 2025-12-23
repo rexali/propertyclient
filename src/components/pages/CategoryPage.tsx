@@ -23,6 +23,8 @@ const CategoryPage: React.FC = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalProperties, setTotalProperties] = useState(1);
+    const [loadingPage, setLoadingPage] = useState<Boolean>(false);
+
     const navigate = useNavigate();
     const sponsoredListing = propertys.filter((property: any) => property.isFeatured === true || property.isSponsored === true);
 
@@ -35,7 +37,15 @@ const CategoryPage: React.FC = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
 
     const getFilteredData = useCallback(async (filters: any, currentPage: number) => {
-        let result = await searchPropertiesAPI({ ...filters, page: currentPage })
+        let result;
+        try {
+            setLoadingPage(true);
+            result = await searchPropertiesAPI({ ...filters, page: currentPage })
+        } catch (error) {
+            console.error(error); 
+        }finally{
+            setLoadingPage(false);
+        } 
         setPropertys(result?.properties || []);
         setTotalProperties(result?.propertyCount || 0)
     }, [currentPage])
@@ -49,6 +59,15 @@ const CategoryPage: React.FC = () => {
         navigate('/properties/' + value, { state: value });
     };
 
+
+
+    if (loadingPage) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">

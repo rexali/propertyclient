@@ -18,9 +18,7 @@ interface CartItem extends Property {
 }
 
 const CartPage: React.FC = () => {
-    // const navigate = useNavigate();
     const { user, admin, isAuthenticated } = useAuth();
-
     const [items, setItems] = useState<CartItem[]>([]);
     const [loadingIds, setLoadingIds] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -28,16 +26,22 @@ const CartPage: React.FC = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
     const [refreshPage, setRefreshPage] = useState<number>(1);
-
+    const [loadingPage, setLoadingPage] = useState<Boolean>(false);
     const itemsPerPage = 10;
 
     useEffect(() => {
         (async () => {
-            // fallback mock items
             if (isAuthenticated) {
-                const { carts, cartCount } = await getUserCartsAPI(user?.userId as string, currentPage);
-                setTotalPages(Math.ceil(Number(cartCount) / itemsPerPage))
-                setItems(([...carts.map((cart: any) => ({ cartId: cart.id, ...cart.Property }))]));
+                try {
+                    setLoadingPage(true);
+                    const { carts, cartCount } = await getUserCartsAPI(user?.userId as string, currentPage);
+                    setTotalPages(Math.ceil(Number(cartCount) / itemsPerPage))
+                    setItems(([...carts.map((cart: any) => ({ cartId: cart.id, ...cart.Property }))]));
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    setLoadingPage(false)
+                }
             }
         })()
 
@@ -139,7 +143,7 @@ const CartPage: React.FC = () => {
                 }))
             } as any);
 
-            // setMessage('Payment successful for all items. Redirecting...');
+            setMessage('Payment successful for all items');
             // setTimeout(() => navigate('/'), 1500);
         } catch (err) {
             setError('Payment failed. Please try again.');
@@ -147,6 +151,16 @@ const CartPage: React.FC = () => {
             setLoadingIds(prev => prev.filter(x => x !== 'all'));
         }
     };
+
+
+    if (loadingPage) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
+
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -172,17 +186,17 @@ const CartPage: React.FC = () => {
                                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         <div>
                                             <label className="block text-xs text-gray-600">Check In</label>
-                                            <input type="date" value={item.checkIn || ''} onChange={(e) => updateItem(item.id, { checkIn: e.target.value })}
+                                            <input type="date" value={item.checkIn || ''} onChange={(e) => updateItem(item.id as number, { checkIn: e.target.value })}
                                                 className="mt-1 block w-full px-2 py-1 border rounded" />
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-600">Check Out</label>
-                                            <input type="date" value={item.checkOut || ''} onChange={(e) => updateItem(item.id, { checkOut: e.target.value })}
+                                            <input type="date" value={item.checkOut || ''} onChange={(e) => updateItem(item.id as number, { checkOut: e.target.value })}
                                                 className="mt-1 block w-full px-2 py-1 border rounded" />
                                         </div>
                                         <div>
                                             <label className="block text-xs text-gray-600">Guests</label>
-                                            <input type="number" min={1} value={item.guests || 1} onChange={(e) => updateItem(item.id, { guests: Math.max(1, Number(e.target.value)) })}
+                                            <input type="number" min={1} value={item.guests || 1} onChange={(e) => updateItem(item.id as number, { guests: Math.max(1, Number(e.target.value)) })}
                                                 className="mt-1 w-full px-2 py-1 border rounded" />
                                         </div>
                                     </div>

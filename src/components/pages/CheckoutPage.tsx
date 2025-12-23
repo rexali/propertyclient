@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const CheckoutPage: React.FC = () => {
     const { id: propertyId } = useParams<{ id?: string }>();
-    const { user} = useAuth();
+    const { user } = useAuth();
     const [property, setProperty] = useState<Property | null>(null);
     const [checkIn, setCheckIn] = useState<string>('');
     const [checkOut, setCheckOut] = useState<string>('');
@@ -17,18 +17,22 @@ const CheckoutPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const [loadingPage, setLoadingPage] = useState<Boolean>(false);
 
     useEffect(() => {
 
         (async () => {
             try {
                 if (!property) {
+                    setLoadingPage(true)
                     const property = await getPropertyAPI(propertyId as unknown as number);
                     setProperty(property);
                 }
-
             } catch (e) {
-                console.error(e);   
+                console.error(e);
+                toast('Error! Loading properties')
+            } finally {
+            setLoadingPage(false)
             }
 
         })()
@@ -87,6 +91,15 @@ const CheckoutPage: React.FC = () => {
             setLoading(false);
         }
     };
+
+
+    if (loadingPage) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="container mx-auto px-4 py-8">
