@@ -33,6 +33,8 @@ const PropertyDetailsPage: React.FC = () => {
   const params = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState<Boolean>(false);
+  
   const propertyId = params.id || location.state;
 
   const initialMessage = {
@@ -270,11 +272,14 @@ const PropertyDetailsPage: React.FC = () => {
     (async () => {
       let data;
       try {
+        setLoading(true)
         data = await getPropertyAPI(propertyId);
       } catch (error) {
         console.log(error);
+      }finally{
+        setLoading(false);
       }
-      
+
       let mockProperty = getPropertyById(propertyId as number);      
       let _property = Object.keys(data ?? {}).length ? data : mockProperty;
       setProperty({
@@ -283,6 +288,15 @@ const PropertyDetailsPage: React.FC = () => {
 
     })();
   }, [propertyId])
+
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

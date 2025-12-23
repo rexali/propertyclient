@@ -23,6 +23,8 @@ const PropertiesPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProperties, setTotalProperties] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState<Boolean>(false);
+
   const navigate = useNavigate();
   const sponsoredListing = propertys?.filter((property: any) => property.isFeatured === true || property.isSponsored === true) || [];
 
@@ -44,18 +46,20 @@ const PropertiesPage: React.FC = () => {
   const getFilteredData = useCallback(async (filters: any, currentPage: number = 1) => {
     let result;
     try {
+      setLoading(true);
       result = await searchPropertiesAPI({ ...filters, page: currentPage });
     } catch (error) {
-      console.log(error);
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-    // mock
-    let propertiex = getProperties();
-    // check
-    let properties = result?.properties?.length ? result.properties : propertiex
-    setTotalProperties(result?.propertyCount ?? 1);
-    setTotalPages(Math.ceil(totalProperties / itemsPerPage));
-    setPropertys(properties);
-
+     // mock
+      let propertiex = getProperties();
+      // check
+      let properties = result?.properties?.length ? result.properties : propertiex
+      setTotalProperties(result?.propertyCount ?? 1);
+      setTotalPages(Math.ceil(totalProperties / itemsPerPage));
+      setPropertys(properties);
 
   }, [currentPage])
 
@@ -67,6 +71,15 @@ const PropertiesPage: React.FC = () => {
   const handleViewProperty = (value: any) => {
     navigate('/properties/' + value, { state: value });
   };
+
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
 
   return (
