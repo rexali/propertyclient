@@ -321,13 +321,6 @@ const PropertyDetailsPage: React.FC = () => {
               className="w-full h-full object-cover"
               crossOrigin=''
             />
-            {/* <img
-              src={property?.images[currentImageIndex] ? BASE_URL_LOCAL + "/uploads/" + property?.images[currentImageIndex] : property?.images[currentImageIndex]}
-              alt={property?.title}
-              className="w-full h-full object-cover"
-              crossOrigin=''
-            /> */}
-
             {/* Image Navigation */}
             {property?.images.length > 1 && (
               <>
@@ -530,12 +523,6 @@ const PropertyDetailsPage: React.FC = () => {
                         className="w-16 h-16 rounded-full mr-4"
                         crossOrigin=''
                       />
-                      {/* <img
-                        src={property?.agent?.avatar ? BASE_URL_LOCAL + '/uploads/' + property?.agent?.avatar : ''}
-                        alt={property?.agent?.name}
-                        className="w-16 h-16 rounded-full mr-4"
-                        crossOrigin=''
-                      /> */}
                       <div>
                         <h3 className="font-bold text-lg text-gray-900">{property?.agent?.name}</h3>
                         <div className="flex items-center">
@@ -602,8 +589,6 @@ const PropertyDetailsPage: React.FC = () => {
                             navigate('/checkout/' + property.id);
                           }}
                           className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-
-                        // className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200"   
                         >
                           <CreditCard className="h-4 w-4 mr-2" />
                           <span className="text-sm">Book Now</span>
@@ -615,8 +600,6 @@ const PropertyDetailsPage: React.FC = () => {
                             await addPropertyToCartAPI(property.id as number, user?.userId);
                           }}
                           className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-
-                        // className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                         >
                           <span className="text-sm"><Plus className="h-4 w-4" /></span>
                           <ShoppingCartIcon className="h-4 w-4" />

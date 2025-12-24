@@ -158,17 +158,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
       <div className="relative h-48 overflow-hidden">
         <Link to={'/properties/' + property?.id}>
           <Image
-            // src={property.images[0] ? BASE_URL_LOCAL + "/uploads/" + property.images[0] : property.images[0]}
             src={BASE_URL_LOCAL + "/uploads/" + property.images[0]}
             alt={property.title}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />
-          {/* <img
-            src={property.images[0] ? BASE_URL_LOCAL + "/uploads/" + property.images[0] : property.images[0]}
-            alt={property.title}
-            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-            crossOrigin=''
-          /> */}
         </Link>
 
         {getStatusBadge()}
@@ -237,12 +230,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onViewDetails, sh
               alt={property.agent.name}
               className="w-8 h-8 rounded-full mr-2"
             />
-            {/* <img
-              src={BASE_URL_LOCAL + "/uploads/" + property.agent.avatar}
-              alt={property.agent.name}
-              className="w-8 h-8 rounded-full mr-2"
-              crossOrigin=''
-            /> */}
             <div>
               <p className="text-sm font-medium text-gray-900">{property.agent.name?.split(' ')[0]}</p>
               <div className="flex items-center">
