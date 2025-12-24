@@ -6,11 +6,14 @@ import { useAuth } from '../../context/AuthContext';
 import { makePaymentWithPopupAPI } from './payment/makePaymentWithPopupAPI';
 import { getPropertyAPI } from './api/getPropertyAPI';
 import { toast } from 'sonner';
+import { getPropertyById } from '../../mocks';
 
 const CheckoutPage: React.FC = () => {
     const { id: propertyId } = useParams<{ id?: string }>();
+    const _property = getPropertyById(propertyId as unknown as number);
     const { user } = useAuth();
-    const [property, setProperty] = useState<Property | null>(null);
+    const [data, setProperty] = useState<Property | null>(null);
+    const property = Object.keys(data ?? {}).length > 0 ? data : _property;
     const [checkIn, setCheckIn] = useState<string>('');
     const [checkOut, setCheckOut] = useState<string>('');
     const [guests, setGuests] = useState<number>(1);
@@ -32,7 +35,7 @@ const CheckoutPage: React.FC = () => {
                 console.error(e);
                 toast('Error! Loading properties')
             } finally {
-            setLoadingPage(false)
+                setLoadingPage(false)
             }
 
         })()
