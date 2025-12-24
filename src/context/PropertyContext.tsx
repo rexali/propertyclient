@@ -167,11 +167,6 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
     dispatch({ type: 'SET_SELECTED_PROPERTY', payload: property });
   };
 
-  const setFilters = (filters: Partial<FilterOptions>) => {
-    dispatch({ type: 'SET_FILTERS', payload: filters });
-    filterProperties();
-  };
-
   const addProperty = (property: Property) => {
     dispatch({ type: 'ADD_PROPERTY', payload: property });
   };
@@ -182,6 +177,11 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const deleteProperty = (propertyId: string) => {
     dispatch({ type: 'DELETE_PROPERTY', payload: propertyId });
+  };
+
+  const setFilters = (filters: Partial<FilterOptions>) => {
+    dispatch({ type: 'SET_FILTERS', payload: filters });
+    filterProperties();
   };
 
   const filterProperties = () => {
@@ -221,7 +221,7 @@ export const PropertyProvider: React.FC<{ children: ReactNode }> = ({ children }
         break;
     }
 
-    dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: filtered  || []});
+    dispatch({ type: 'SET_FILTERED_PROPERTIES', payload: [...filtered]});
   };
 
   const setLoading = (loading: boolean) => {

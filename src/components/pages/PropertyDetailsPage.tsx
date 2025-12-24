@@ -26,6 +26,7 @@ import { makePaymentWithPopupAPI } from './payment/makePaymentWithPopupAPI';
 import { fetchDataAPI } from '../../api/fetchDataAPI';
 import { isExistingAPI } from './api/isExistingAPI';
 import { getPropertyById } from '../../mocks';
+import Image from '../common/Image';
 
 const PropertyDetailsPage: React.FC = () => {
   const { isAuthenticated, user, admin } = useAuth();
@@ -34,7 +35,7 @@ const PropertyDetailsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState<Boolean>(false);
-  
+
   const propertyId = params.id || location.state;
 
   const initialMessage = {
@@ -276,11 +277,11 @@ const PropertyDetailsPage: React.FC = () => {
         data = await getPropertyAPI(propertyId);
       } catch (error) {
         console.log(error);
-      }finally{
+      } finally {
         setLoading(false);
       }
 
-      let mockProperty = getPropertyById(propertyId as number);      
+      let mockProperty = getPropertyById(propertyId as number);
       let _property = Object.keys(data ?? {}).length ? data : mockProperty;
       setProperty({
         ..._property
@@ -314,12 +315,18 @@ const PropertyDetailsPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Image Gallery */}
           <div className="relative h-96 md:h-[500px]">
-            <img
+            <Image
+              src={property?.images[currentImageIndex] ? BASE_URL_LOCAL + "/uploads/" + property?.images[currentImageIndex] : property?.images[currentImageIndex]}
+              alt={property.title}
+              className="w-full h-full object-cover"
+              crossOrigin=''
+            />
+            {/* <img
               src={property?.images[currentImageIndex] ? BASE_URL_LOCAL + "/uploads/" + property?.images[currentImageIndex] : property?.images[currentImageIndex]}
               alt={property?.title}
               className="w-full h-full object-cover"
               crossOrigin=''
-            />
+            /> */}
 
             {/* Image Navigation */}
             {property?.images.length > 1 && (
@@ -490,7 +497,16 @@ const PropertyDetailsPage: React.FC = () => {
                   <div className="bg-gray-200 h-64 rounded-lg overflow-hidden">
                     <div className="text-center text-gray-600">
                       <p className="h-96 bg-gray-300 flex items-center justify-center">
-                        <iframe className='w-full' src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3902.9764542677494!2d8.542524274532385!3d11.976131035921783!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x11ae8132a0dd23b3%3A0x1d15892c04225543!2sAlmubarak%20Waqf%20Foundation!5e0!3m2!1sen!2sng!4v1759930542722!5m2!1sen!2sng" width="100%" height="450" style={{ border: 0 }} allowFullScreen={true} loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+                        <iframe
+                          className='w-full'
+                          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3902.9764542677494!2d8.542524274532385!3d11.976131035921783!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x11ae8132a0dd23b3%3A0x1d15892c04225543!2sAlmubarak%20Waqf%20Foundation!5e0!3m2!1sen!2sng!4v1759930542722!5m2!1sen!2sng"
+                          width="100%"
+                          height="450"
+                          style={{ border: 0 }}
+                          allowFullScreen={true}
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade">
+                        </iframe>
                       </p>
                     </div>
                   </div>
@@ -508,12 +524,18 @@ const PropertyDetailsPage: React.FC = () => {
                   {/* Agent Card */}
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <div className="flex items-center mb-4">
-                      <img
+                      <Image
                         src={property?.agent?.avatar ? BASE_URL_LOCAL + '/uploads/' + property?.agent?.avatar : ''}
                         alt={property?.agent?.name}
                         className="w-16 h-16 rounded-full mr-4"
                         crossOrigin=''
                       />
+                      {/* <img
+                        src={property?.agent?.avatar ? BASE_URL_LOCAL + '/uploads/' + property?.agent?.avatar : ''}
+                        alt={property?.agent?.name}
+                        className="w-16 h-16 rounded-full mr-4"
+                        crossOrigin=''
+                      /> */}
                       <div>
                         <h3 className="font-bold text-lg text-gray-900">{property?.agent?.name}</h3>
                         <div className="flex items-center">

@@ -10,6 +10,7 @@ import {
 import { SimplePagination } from '../common/SimplePagination';
 import { searchPropertiesAPI } from './api/searchPropertiesAPI';
 import { getProperties } from '../../mocks';
+import Image from '../common/Image';
 
 const PropertiesPage: React.FC = () => {
   const {
@@ -64,7 +65,7 @@ const PropertiesPage: React.FC = () => {
   }, [currentPage])
 
   React.useEffect(() => {
-    filterProperties();
+    // filterProperties();
     getFilteredData(filters, currentPage);
   }, [currentPage]);
 
@@ -196,7 +197,7 @@ const PropertiesPage: React.FC = () => {
                   <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="flex flex-col sm:flex-row">
                       <div className="sm:w-80 h-48 sm:h-auto relative">
-                        <img
+                        <Image
                           src={property.images[0] ? BASE_URL_LOCAL + "/uploads/" + property.images[0] : property.images[0]}
                           alt={property.title}
                           style={{ height: 210 }}
@@ -234,7 +235,7 @@ const PropertiesPage: React.FC = () => {
                         </p>
                         <div className="flex justify-between items-center">
                           <div className="flex items-center">
-                            <img
+                            <Image
                               src={property.agent.avatar}
                               alt={property.agent.name}
                               className="w-8 h-8 rounded-full mr-2"

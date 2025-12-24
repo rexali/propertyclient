@@ -22,8 +22,8 @@ const HomePage: React.FC = () => {
     properties?.filter(p => p.status)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3) : getProperties();
 
-  const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 3).length ? 
-  properties?.filter(p => p.status === 'sold').slice(0, 3) : getProperties();
+  const soldProperties = properties?.filter(p => p.status === 'sold').slice(0, 3).length ?
+    properties?.filter(p => p.status === 'sold').slice(0, 3) : getProperties();
 
   const handleViewProperty = (value: any) => {
     navigate('/properties/' + value, { state: value });
@@ -110,6 +110,7 @@ const HomePage: React.FC = () => {
     })();
   }, []);
 
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -162,7 +163,7 @@ const HomePage: React.FC = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Property Categories</h2>
             <p className="text-lg text-gray-600">Browse properties by type</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             {categories.map((category, index) => (
               <button
                 key={index}
@@ -216,13 +217,21 @@ const HomePage: React.FC = () => {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProperties?.map((property) => (
+            {
+            featuredProperties.length ? featuredProperties.map((property) => (
               <PropertyCard
                 key={property.id}
                 property={property}
                 onViewDetails={handleViewProperty}
               />
-            ))}
+            )) : getProperties().map((property) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                onViewDetails={handleViewProperty}
+              />)
+            )
+            }
           </div>
         </div>
       </section>
